@@ -2,13 +2,6 @@
 
 > Production-ready Local LLM Chat Assistant powered by Ollama, LangChain, PostgreSQL, Docker and Streamlit.
 
-![Python](...)
-![Docker](...)
-![LangChain](...)
-![Ollama](...)
-![License](...)
-
-
 ## Table of Contents
 
 - Overview
@@ -28,6 +21,17 @@
 ## Overview
 A production-oriented **local Generative AI chatbot** built with **Streamlit**, **LangChain**, **Ollama**, and **PostgreSQL**.
 
+## Features
+
+| Feature        | Description              | Status |
+| -------------- | ------------------------ | ------ |
+| Chat History   | PostgreSQL persistence   | ✅     |
+| Multiple Chats | Session management       | ✅     |
+| Rename Chats   | Rename conversations     | ✅     |
+| Docker         | Containerized deployment | ✅     |
+| Streaming      | Token streaming          | 🚧     |
+
+
 ## 🎥 Demo
 
 ![Demo](docs/demo.gif)
@@ -39,25 +43,25 @@ A production-oriented **local Generative AI chatbot** built with **Streamlit**, 
 
 ### Home Screen
 
-![Home](docs/images/home.png)
+![Home](assets/home_screeen.png)
 
 ---
 
 ### Chat Window
 
-![Chat](docs/images/chat.png)
+![Chat](assets/Chat_Window.png)
 
 ---
 
 ### Sidebar
 
-![Sidebar](docs/images/sidebar.png)
+![Sidebar](assets/Sidebar.png)
 
 ---
 
 ### Docker Containers
 
-![Docker](docs/images/docker.png)
+![Docker](assets/docker_containers.png)
 
 ---
 
@@ -97,16 +101,6 @@ D --> E
 B --> F
 B --> G
 ```
-
-## Feature Table
-
-| Feature        | Description              | Status |
-| -------------- | ------------------------ | ------ |
-| Chat History   | PostgreSQL persistence   | ✅      |
-| Multiple Chats | Session management       | ✅      |
-| Rename Chats   | Rename conversations     | ✅      |
-| Docker         | Containerized deployment | ✅      |
-| Streaming      | Token streaming          | 🚧     |
            
 
 ## Tech Stack
