@@ -6,7 +6,7 @@ Goal: turn a pasted JD into an evidence-based application package through explic
 |---|---|---|
 | 0–1 | Local setup, /help, /status, action registry | Self-hosted Ollama; no external tracing required |
 | 2–3 | Google authentication, source settings, /save_jd | Configured folders only; preserve original JD |
-| 4–5 | Source catalogue, /compare_resume | Read-only evidence; no invented achievements or ATS predictions |
+| 4–5 | Source catalogue, /requirements, /review_requirements, /compare_resume | Reviewed JD scope; read-only evidence; no ATS predictions |
 | 6 | /draft_resume, /format_resume, /suggest_edits, /apply_edits | New tab only; originals preserved |
 | 7 | /track_application | Dedicated copied-workbook tab; preserve existing tabs/formulas; status Prepared |
 | 8–9 | Cover letter and application summary | Optional letter; no job submission |

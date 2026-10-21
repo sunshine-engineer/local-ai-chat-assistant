@@ -46,7 +46,9 @@ References: [OAuth desktop flow](https://developers.google.com/identity/protocol
 
 - `/refresh_sources`: reads Google Docs directly in configured folders (no recursive Drive scan), selected resume tabs, and local Markdown/text files recursively. Reports skipped files. No remote files change.
 - `/show_sources`: lists catalogue IDs and links.
-- `/compare_resume APPLICATION_ID`: extracts quoted JD requirements, assesses each resume separately, recommends by supported/partial counts, then assesses supporting documents separately. Saves a source snapshot with results. Exact quotations are validated; the model's interpretation still needs review.
+- `/requirements APPLICATION_ID`: lists every exact non-empty JD sentence/line candidate, without a model call or Google write.
+- `/review_requirements {"application_id":"APPLICATION_ID","candidate_ids":[1,2,3],"reviewed":true}`: saves 1–30 reviewed candidate IDs. Include required and desirable skills, duties and qualifications; exclude marketing and application instructions. IDs depend on the JD; inspect the list first. Scope becomes fixed once a resume or letter draft exists.
+- `/compare_resume APPLICATION_ID`: requires reviewed JD scope, assesses every selected sentence against each resume, recommends by supported/partial counts, then assesses supporting documents separately. Counts cover only selected sentences; they are not a complete-JD score. Saves a source snapshot with results. Exact quotations are validated; model interpretations still need review. Model calls assess at most three requirements per batch by default to bound output size.
 
 Set `resume_tab_ids` to the tab IDs you want compared. Otherwise non-empty tabs except cover letters and app-generated drafts are candidates. Keep the candidate set small for initial tests. Readmes are portfolio evidence, not proof of production work. Source content is sent only to the configured Ollama endpoint. Set OLLAMA_CONTEXT (default 16384) and ASSISTANT_PROMPT_CHAR_LIMIT (default 24000) for your model and hardware; oversized input fails rather than being silently truncated. Model quality/latency is not validated by offline tests.
 
@@ -117,3 +119,12 @@ The first command previews the preset without a Google request. The write comman
 A completed draft without pending edits is required. Writes use the current Google revision and verify requested styles, unchanged text and unchanged other tabs. Approval is invalidated before the remote write, including when the request times out. Retry the same command if its result is uncertain, then export and inspect the PDF before approving again. Different templates can still exceed two pages. The command has no automatic undo; restore formatting manually in the copied tab or create a separate application variant.
 
 Reference: [Google Docs formatting request API](https://developers.google.com/workspace/docs/api/reference/rest/v1/documents/request).
+
+
+## Requirement scope and comparison limits
+
+The previous automatic extraction passed structural checks while selecting a marketing sentence and omitting technical requirements on a real JD. It has been replaced by explicit scope review. `/requirements` includes all candidates so no model silently removes a sentence. You must still check your selection for omissions; one sentence may contain multiple skills, and counts are sentence-level comparisons.
+
+Reselecting requirements before a draft clears the old comparison and source snapshot. A changed JD invalidates review. More than 200 candidates requires a shorter JD; more than 30 selected candidates is rejected without truncation. Once a resume or letter draft exists, use a new application variant instead of changing its evidence scope.
+
+`ASSISTANT_REQUIREMENT_BATCH_SIZE` defaults to 3 and accepts 1–5. Smaller batches reduce per-call output size, but a full comparison can take several minutes per resume on CPU. Every selected requirement must have exactly one validated match; missing or duplicate matches fail without saving a partial comparison.
