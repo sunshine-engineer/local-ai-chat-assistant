@@ -55,3 +55,16 @@ Set `resume_tab_ids` to the tab IDs you want compared. Otherwise non-empty tabs 
 All Google writes require `sandbox_folder_id`. Output folders must equal that folder. Resume and tracker writes additionally verify the target file is directly inside it. Use copies of your documents and workbook; keep originals outside this folder. Set a private `protected_original_ids` list in workflow state to additionally prevent original IDs being configured as write targets. OAuth grants themselves are not folder-restricted.
 
 Your existing tracker can stay unchanged inside its copy. The tracking module will create a dedicated `Assistant Applications` tab in the copied workbook, with stable headers for application IDs, artifact links and status. Existing Tracker, dashboard, formulas and other tabs are preserved.
+
+## Resume draft and explicit edits
+
+```text
+/draft_resume APPLICATION_ID
+/suggest_edits APPLICATION_ID
+/apply_edits {"application_id":"APPLICATION_ID","edit_ids":[0,2],"reviewed":true}
+/approve_resume APPLICATION_ID
+```
+
+Drafting copies the recommended resume into a new `Assistant — APPLICATION_ID` tab inside the sandbox resume document. It preserves paragraph and text styles for paragraph-only templates. Tables, native lists, embedded objects, header/footer content and unresolved suggestions are rejected before creating a draft. The two general resume tabs inspected in the supplied sandbox copy use supported text/paragraph structures. Rendering/PDF fidelity still needs manual review.
+
+Suggestions cite exact source excerpts but their factual meaning is not mechanically proven. Review them before applying. Only selected edits are applied, within the owned draft tab, with revision guards and readback. Other tabs are checked for changes. Repeating the same completed command does not apply edits twice. An ambiguous write must be reconciled using the same command before generating new suggestions. `/approve_resume` is your declaration that you inspected the current content and layout; the app does not claim automated PDF validation.
