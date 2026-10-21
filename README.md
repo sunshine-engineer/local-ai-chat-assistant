@@ -17,6 +17,8 @@ A single-user, command-first assistant built with Python, Streamlit, Ollama and 
 
 This is a development implementation, not a verified production deployment. Voice, automation, autonomous multi-agent workflows, and general-purpose Google editing are deferred. Google REST access is behind a separate adapter; an MCP client is not implemented yet.
 
+The **Inspect comparison evidence** panel provides a read-only view of proposed verdicts, recorded decisions, flags and full source context. Load an application ID and choose a source/requirement. Review decisions still use `/review_comparison`; opening the panel grants no approval. See [the review walkthrough](docs/TESTING.md#comparison-inspection-panel).
+
 ## Start locally
 
 Python 3.12+ and Docker are used below; Ollama runs in a container.

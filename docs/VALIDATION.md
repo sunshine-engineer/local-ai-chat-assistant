@@ -69,3 +69,12 @@ A new app-owned Google sandbox acceptance verified that an unreviewed comparison
 Live cover-letter generation exposed another semantic failure: a skills-list quote was expanded into implementation and performance claims. The new letter-inclusion gate blocked tracking and marked preparation incomplete. The test reviewer explicitly omitted that letter; its draft remains available. Only the synthetic test row's cover-letter cell in the copied tracker was cleared to reconcile the earlier pre-gate write, with all other row cells verified unchanged. Tracking retries then passed without duplication and the summary reported the letter as omitted. This acceptance demonstrates enforced review and exclusion, not reliable model judgment. Original user files were not modified.
 
 The local review app was updated to the comparison-control image through the existing isolated Compose configuration. Docker and Windows health checks returned `ok`, `/evidence` remained read-only, and the container CLI returned a Prepared summary with the test letter explicitly omitted.
+
+
+## Read-only comparison viewer — 2026-10-22
+
+The comparison panel shows the selected requirement, model proposal, recorded reviewer decision, full frozen source and an incomplete command template. Inspection does not accept evidence, select a resume, regenerate judgments or write Google files. Users explicitly reload after commands; switching application IDs hides the previous view.
+
+All 73 regression tests pass on host Python 3.14 and in the built Python 3.12 image with networking disabled. Four Streamlit tests cover proposal/decision separation, corrected decision reload, source and requirement navigation, incomplete templates, unchanged application state and stale-view removal.
+
+The full app was exercised through Streamlit AppTest inside the running Compose container against the saved sandbox comparison. Recorded decisions and full source context were visible, the template remained incomplete, the application record was unchanged, and patched Google/model entrypoints were never invoked. Docker and Windows health endpoints returned `ok`; the evidence mount remained read-only. This is a UI behavior check, not a browser screenshot/layout inspection or a new model-quality evaluation. Human review and command-based approvals remain mandatory; automation remains deferred.

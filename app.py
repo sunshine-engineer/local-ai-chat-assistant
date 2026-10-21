@@ -62,6 +62,9 @@ st.set_page_config(
 # Title of the app
 st.title("Local AI Assistant")
 
+from assistant.review_ui import render_comparison_review
+render_comparison_review()
+
 # Select the Open Source Model
 # Adjust the response parameter
 st.sidebar.title("Chats")

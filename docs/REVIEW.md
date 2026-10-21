@@ -15,6 +15,7 @@ The implementation is split into stacked PRs. Nothing is merged automatically.
 | 9 | [#9](https://github.com/sunshine-engineer/local-ai-chat-assistant/pull/9) | Explicit JD scope review, bounded comparison batches and honest real-model limitations |
 | 10 | [#10](https://github.com/sunshine-engineer/local-ai-chat-assistant/pull/10) | Read-only reference mount, actual project ingestion and clean-image Compose acceptance |
 | 11 | [#11](https://github.com/sunshine-engineer/local-ai-chat-assistant/pull/11) | Snapshot-bound comparison review, accepted evidence only, protected edits, exact batch approval and cover-letter inclusion review |
+| 12 | [#12](https://github.com/sunshine-engineer/local-ai-chat-assistant/pull/12) | Read-only comparison inspection, explicit proposal/decision separation and command-review walkthrough |
 
 PR #5 includes page/named style corrections found during live sandbox validation; assess the latest stack for the final behavior. Each PR diff is against its predecessor. Test the top branch before merging if you want to exercise the full app.
 
