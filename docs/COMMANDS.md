@@ -41,3 +41,17 @@ The same input yields the same application ID. The generated Doc preserves the J
 Remote documents carry an application key for retry reconciliation. Do not edit generated JD artifacts while a failed write is being retried. A content mismatch stops the action instead of overwriting your edits. Do not run two copies of the app against the same account with separate state folders.
 
 References: [OAuth desktop flow](https://developers.google.com/identity/protocols/oauth2/native-app), [Drive file creation](https://developers.google.com/workspace/drive/api/guides/create-file), [Docs requests](https://developers.google.com/workspace/docs/api/reference/rest/v1/documents/request).
+
+## Evidence and comparison
+
+- `/refresh_sources`: reads Google Docs directly in configured folders (no recursive Drive scan), selected resume tabs, and local Markdown/text files recursively. Reports skipped files. No remote files change.
+- `/show_sources`: lists catalogue IDs and links.
+- `/compare_resume APPLICATION_ID`: extracts quoted JD requirements, assesses each resume separately, recommends by supported/partial counts, then assesses supporting documents separately. Saves a source snapshot with results. Exact quotations are validated; the model's interpretation still needs review.
+
+Set `resume_tab_ids` to the tab IDs you want compared. Otherwise non-empty tabs except cover letters and app-generated drafts are candidates. Keep the candidate set small for initial tests. Readmes are portfolio evidence, not proof of production work. Source content is sent only to the configured Ollama endpoint. Set OLLAMA_CONTEXT (default 16384) and ASSISTANT_PROMPT_CHAR_LIMIT (default 24000) for your model and hardware; oversized input fails rather than being silently truncated. Model quality/latency is not validated by offline tests.
+
+## Sandbox-only writes
+
+All Google writes require `sandbox_folder_id`. Output folders must equal that folder. Resume and tracker writes additionally verify the target file is directly inside it. Use copies of your documents and workbook; keep originals outside this folder. Set a private `protected_original_ids` list in workflow state to additionally prevent original IDs being configured as write targets. OAuth grants themselves are not folder-restricted.
+
+Your existing tracker can stay unchanged inside its copy. The tracking module will create a dedicated `Assistant Applications` tab in the copied workbook, with stable headers for application IDs, artifact links and status. Existing Tracker, dashboard, formulas and other tabs are preserved.

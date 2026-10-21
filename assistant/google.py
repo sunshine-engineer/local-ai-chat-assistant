@@ -79,6 +79,7 @@ def body_text(body):
 class Google:
     def __init__(self, root, session=None):
         self.root, self._session = root, session
+        self.sandbox_folder_id = None
 
     def call(self, method, url, **kwargs):
         try:
@@ -94,6 +95,12 @@ class Google:
             # Never surface HTTP bodies, tokens or credentials in chat.
             raise GoogleError('Google connection failed; check network and authorization. A remote write may have completed; rerun the same command to reconcile.') from exc
 
+    def check_write(self, file_id):
+        if not self.sandbox_folder_id:
+            raise ValueError('Configure sandbox_folder_id before any Google write.')
+        if self.sandbox_folder_id not in self.metadata(file_id).get('parents', []):
+            raise ValueError('Writes are limited to copies directly inside the configured sandbox folder.')
+
     def metadata(self, file_id):
         return self.call('GET', 'https://www.googleapis.com/drive/v3/files/' + quote(file_id, safe=''),
                          params={'fields': 'id,name,mimeType,parents,trashed'})
@@ -103,6 +110,7 @@ class Google:
                          params={'includeTabsContent': 'true'})
 
     def batch(self, doc_id, requests, revision):
+        self.check_write(doc_id)
         return self.call('POST', 'https://docs.googleapis.com/v1/documents/' + quote(doc_id, safe='') + ':batchUpdate',
                          json={'requests': requests, 'writeControl': {'requiredRevisionId': revision}})
 
@@ -119,6 +127,8 @@ class Google:
                 return result
 
     def create_document(self, folder, title, key, text):
+        if not self.sandbox_folder_id or folder != self.sandbox_folder_id:
+            raise ValueError('Document output must be the configured sandbox folder.')
         if self.metadata(folder).get('mimeType') != FOLDER:
             raise ValueError('Output destination must be a Google Drive folder.')
         matches = self.files(f"'{folder}' in parents and trashed=false and appProperties has {{ key='assistant_key' and value='{key}' }}")

@@ -16,9 +16,14 @@ class Jobs:
     def __init__(self, store=None, google=None):
         self.store = store or Store()
         self.google = google or Google(self.store.root)
+        self.google.sandbox_folder_id = self.store.get('config', {}).get('sandbox_folder_id')
 
     def register(self, registry):
+        from assistant import evidence
         commands = [
+            ('refresh_sources', 'Read configured reference files and resume tabs.', lambda a: evidence.refresh(self, a)),
+            ('show_sources', 'List source catalogue and skipped files.', lambda a: evidence.show(self, a)),
+            ('compare_resume', 'Compare an application ID against resume and project evidence.', lambda a: evidence.compare(self, a)),
             ('google_connect', 'CLI only: connect using an OAuth Desktop client JSON path.', self.connect),
             ('configure', 'Save configured Google resource IDs and local source folders as JSON.', self.configure),
             ('sources', 'Show current resource configuration.', self.sources),
@@ -39,21 +44,26 @@ class Jobs:
     def configure(self, arguments):
         data = json_input(arguments)
         allowed = {'source_folder_ids', 'local_source_dirs', 'jd_folder_id', 'resume_doc_id',
-                   'cover_letter_folder_id', 'tracker_id', 'tracker_tab', 'tracker_columns'}
+                   'cover_letter_folder_id', 'tracker_id', 'tracker_tab', 'tracker_columns',
+                   'sandbox_folder_id', 'resume_tab_ids'}
         if set(data) - allowed:
             raise ValueError('Unknown configuration key(s). See docs/COMMANDS.md.')
         config = {**self.store.get('config', {}), **data}
-        for key in ('jd_folder_id', 'resume_doc_id', 'tracker_id', 'cover_letter_folder_id'):
+        for key in ('jd_folder_id', 'resume_doc_id', 'tracker_id', 'cover_letter_folder_id', 'sandbox_folder_id'):
             if key in config:
                 identifier(config[key])
-        for key in ('source_folder_ids', 'local_source_dirs'):
+        for key in ('source_folder_ids', 'local_source_dirs', 'resume_tab_ids'):
             if key in config and (not isinstance(config[key], list) or not all(isinstance(v, str) for v in config[key])):
                 raise ValueError(f'{key} must be a list of strings.')
         for value in config.get('source_folder_ids', []):
             identifier(value)
         if 'tracker_tab' in config and not isinstance(config['tracker_tab'], str):
             raise ValueError('tracker_tab must be a string.')
+        protected = self.store.get('protected_original_ids', [])
+        if any(config.get(k) in protected for k in ('sandbox_folder_id', 'resume_doc_id', 'tracker_id', 'jd_folder_id', 'cover_letter_folder_id')):
+            raise ValueError('An original resource is protected. Configure its sandbox copy instead.')
         self.store.put('config', config)
+        self.google.sandbox_folder_id = config.get('sandbox_folder_id')
         return 'Configuration saved. /sources shows configured resources.'
 
     def sources(self, arguments=''):
