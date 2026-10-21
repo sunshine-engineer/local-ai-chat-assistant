@@ -19,13 +19,14 @@ class Jobs:
         self.google.sandbox_folder_id = self.store.get('config', {}).get('sandbox_folder_id')
 
     def register(self, registry):
-        from assistant import evidence, resumes, tracking, package
+        from assistant import evidence, resumes, tracking, package, layout
         commands = [
             ('init_tracker', 'Create a dedicated tab in the sandbox tracker copy.', lambda a: tracking.initialize(self, a)),
             ('track_application', 'Preview a tracker row; add --write to save it.', lambda a: tracking.track(self, a)),
             ('draft_cover_letter', 'Generate and save an optional cited cover-letter draft.', lambda a: package.cover_letter(self, a)),
             ('application_summary', 'Show application links, completion and remaining checks.', lambda a: package.summary(self, a)),
             ('draft_resume', 'Copy the recommended resume into a new sandbox tab.', lambda a: resumes.draft(self, a)),
+            ('format_resume', 'Preview compact draft formatting; add --write to apply and invalidate approval.', lambda a: layout.format_resume(self, a)),
             ('suggest_edits', 'Suggest cited resume changes without writing to Google.', lambda a: resumes.suggest(self, a)),
             ('apply_edits', 'Apply selected reviewed edit IDs from a JSON payload.', lambda a: resumes.apply(self, a)),
             ('reset_edits', 'Keep current draft and discard local suggestions/pending edits after review.', lambda a: resumes.reset(self, a)),

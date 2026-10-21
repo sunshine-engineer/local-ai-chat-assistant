@@ -14,7 +14,7 @@ The PRs are stacked. Test the latest stack branch to exercise all modules withou
 
 ```bash
 git fetch origin
-git switch fix/live-validation
+git switch feat/resume-formatting
 ```
 
 If you already have uncommitted work, preserve it before switching. Review/merge order is documented in [REVIEW.md](REVIEW.md). Do not merge to run these tests.
@@ -170,6 +170,10 @@ For step 9, use only edit IDs you actually reviewed. Example payload:
 Paste the payload after `/apply_edits` in the UI, or save it privately and pipe it into `python -m assistant.cli /apply_edits` using the same stdin patterns above. If no suggestions are suitable, skip applying edits, review the copied resume, and approve that version.
 
 Create an optional cover letter before writing the tracker row so its link is included. If added later, the app does not silently update the existing row. The summary never means that an application was submitted.
+
+### Formatting acceptance
+
+On a sandbox draft, preview `/format_resume APPLICATION_ID`. Confirm the preset and that approval is unchanged. Run `/format_resume APPLICATION_ID --write`, then repeat it. Expected: no text change, no new tab, verified compact styles, other tabs unchanged, and approval cleared. Pending edits must block formatting. Export the selected draft tab to PDF and inspect every page; confirm that dates, contact details and education remain readable. Only then run `/approve_resume APPLICATION_ID` again. Repeating the preset does not guarantee two pages on arbitrary input.
 
 ### Quality review
 

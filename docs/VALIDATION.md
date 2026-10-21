@@ -6,7 +6,7 @@ Development snapshot: 2026-10-21. Results below separate real services from test
 
 | Layer | Evidence | Limit |
 |---|---|---|
-| Offline regression | 31 tests pass on host Python 3.14 and container Python 3.12: commands, CLI, UI chat/commands, recovery, source snapshots, citations, Unicode edits and tracker boundaries | Google/model doubles in workflow tests |
+| Offline regression | 38 tests pass on host Python 3.14 and container Python 3.12: commands, CLI, UI chat/commands, recovery, source snapshots, citations, Unicode edits and tracker boundaries | Google/model doubles in workflow tests |
 | Real local services | Three opt-in tests pass: Streamlit chat with Docker Qwen, synthetic supported/gap comparison, PostgreSQL message persistence | One small synthetic comparison is not a quality benchmark |
 | App-owned Google login | Desktop browser consent, Drive/Docs/Sheets access and forced token refresh/persistence pass | Credentials remain private; testing-mode OAuth can need renewed consent |
 | Google sandbox | Three supplied files copied/read back; copied resume has a validation tab with matching content/styles; preceding 36 tabs unchanged | Connector-assisted checks are distinct from app OAuth execution |
@@ -22,7 +22,7 @@ CPU measurements on one test run: copied-resume comparison approximately 73 seco
 
 - Full app-owned Google command sequence passes: JD save/retry, source refresh, comparison, resume draft/retry, suggestions, controlled reviewed edit/retry, local reset, approval, cover-letter save/reconciliation, tracker initialization/retry, row preview/write/retry, and final Prepared summary. The controlled edit is an explicit sandbox marker, not a model-generated recommendation. The first cover-letter save hit a network timeout; retry reconciled successfully. Existing resume tabs were checked for preservation during writes; all 38 tabs present before the final letter/tracker phase remained unchanged afterward.
 - Clean build of the repository Dockerfile: dependency download timed out fetching PyArrow. Cache/retry settings were added, but the updated clean build has not passed. A reused dependency image was used for runtime checks.
-- PDF layout was inspected after a selected-tab export succeeded (the whole-document export timed out). The PDF contains the test marker, confirming the correct draft was exported. All three pages render, but the final education entry spills onto a mostly empty third page. This sandbox sample needs shortening/page-fit review before real use; automatic page fitting is not implemented.
+- The copied template initially rendered across three pages, with education spilling onto page three. The new `/format_resume` preview/write command was exercised through app OAuth, including repeated writes. Exact text and all 37 other tabs were preserved, requested styles read back correctly, and approval was invalidated. A selected-tab PDF export then rendered as two readable pages; both were visually inspected and contained the validation marker. This sample passes page-fit inspection, but other inputs may need shortening. Approval and existing tracker reconciliation passed afterward without adding a row. No automatic page-count guarantee is provided.
 
 ## Practical limits
 

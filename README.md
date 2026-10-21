@@ -11,7 +11,7 @@ A single-user, command-first assistant built with Python, Streamlit, Ollama and 
 | JD capture | `/save_jd` | Original text preserved in a new Google Doc |
 | Source catalogue | `/refresh_sources`, `/show_sources` | Selected resume tabs, Docs, local Markdown/text |
 | Resume comparison | `/compare_resume` | Source quotes validated; judgments require review |
-| Resume tailoring | `/draft_resume`, `/suggest_edits`, `/apply_edits`, `/reset_edits`, `/approve_resume` | New tab; explicit reviewed edits only |
+| Resume tailoring | `/draft_resume`, `/format_resume`, `/suggest_edits`, `/apply_edits`, `/reset_edits`, `/approve_resume` | New tab; explicit reviewed edits only |
 | Tracking | `/init_tracker`, `/track_application` | Dedicated tab in copied workbook; Prepared status |
 | Application package | `/draft_cover_letter`, `/application_summary` | Optional letter; no automatic submission |
 
@@ -57,6 +57,8 @@ Typical sequence:
 /application_summary APPLICATION_ID
 ```
 
+If the copied resume needs tighter spacing, preview `/format_resume APPLICATION_ID`, then use `--write` to apply the compact preset. Text stays unchanged; approval is invalidated. Export and inspect the PDF before approving again. Formatting does not guarantee a page count.
+
 Cover letters are optional. `/track_application` previews; adding `--write` saves. Use the application ID returned by `/save_jd`. CLI commands also accept JSON on stdin: `python -m assistant.cli /save_jd < jd.json`.
 
 ## Architecture and extension
@@ -75,6 +77,7 @@ The initial copier supports paragraph/text resumes with page and named styles. C
 - [Manual test report template](docs/TEST_REPORT_TEMPLATE.md)
 - [Current validation and limitations](docs/VALIDATION.md)
 - [Module plan and boundaries](docs/PLAN.md)
+- [How to add a module or command](docs/EXTENDING.md)
 
 ## Validation
 
