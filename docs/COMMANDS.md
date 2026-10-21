@@ -18,7 +18,7 @@ The initial adapter uses Google REST APIs, with OAuth scopes for reading Drive a
 Resource IDs are the ID portions of Google URLs. Source folders are read only. Only explicitly configured output documents/folders and the tracker receive writes.
 
 ```text
-/configure {"source_folder_ids":["SOURCE_FOLDER_ID"],"local_source_dirs":["/absolute/project/docs"],"jd_folder_id":"JD_FOLDER_ID","resume_doc_id":"RESUME_DOC_ID","cover_letter_folder_id":"LETTERS_FOLDER_ID","tracker_id":"SPREADSHEET_ID","tracker_tab":"Applications","tracker_columns":{"application_id":"Application ID","company":"Company","role":"Role","job_url":"Job URL","jd_url":"JD","resume_url":"Resume","status":"Status","prepared_date":"Prepared Date"}}
+/configure {"sandbox_folder_id":"SANDBOX_FOLDER_ID","source_folder_ids":["SOURCE_FOLDER_ID"],"local_source_dirs":["/absolute/project/docs"],"jd_folder_id":"SANDBOX_FOLDER_ID","resume_doc_id":"RESUME_DOC_ID","cover_letter_folder_id":"SANDBOX_FOLDER_ID","tracker_id":"SPREADSHEET_ID","tracker_tab":"Applications","tracker_columns":{"application_id":"Application ID","company":"Company","role":"Role","job_url":"Job URL","jd_url":"JD","resume_url":"Resume","status":"Status","prepared_date":"Prepared Date"}}
 /sources
 ```
 
@@ -68,3 +68,19 @@ Your existing tracker can stay unchanged inside its copy. The tracking module wi
 Drafting copies the recommended resume into a new `Assistant — APPLICATION_ID` tab inside the sandbox resume document. It preserves paragraph and text styles for paragraph-only templates. Tables, native lists, embedded objects, header/footer content and unresolved suggestions are rejected before creating a draft. The two general resume tabs inspected in the supplied sandbox copy use supported text/paragraph structures. Rendering/PDF fidelity still needs manual review.
 
 Suggestions cite exact source excerpts but their factual meaning is not mechanically proven. Review them before applying. Only selected edits are applied, within the owned draft tab, with revision guards and readback. Other tabs are checked for changes. Repeating the same completed command does not apply edits twice. An ambiguous write must be reconciled using the same command before generating new suggestions. `/approve_resume` is your declaration that you inspected the current content and layout; the app does not claim automated PDF validation.
+
+## Tracking and package summary
+
+```text
+/init_tracker
+/track_application APPLICATION_ID
+/track_application APPLICATION_ID --write
+/draft_cover_letter APPLICATION_ID
+/application_summary APPLICATION_ID
+```
+
+`/init_tracker` creates only the dedicated `Assistant Applications` tab in the copied workbook. The original tracker layout contains custom scoring columns; this first version preserves them and uses a dedicated tab instead of forcing a new schema onto existing data. Configure `tracker_tab` as `Assistant Applications`. `tracker_columns` is reserved for future existing-header mapping; this version uses fixed documented headers and does not interpret that setting.
+
+Tracking first previews the proposed row. `--write` saves only after current resume approval. Dates use Asia/Kolkata. Status is Prepared, never Applied. The command checks duplicate application IDs and job URLs, refuses occupied/formula-containing reserved rows, writes RAW text and reads back the exact row. Capacity is 999 entries. Local state locking prevents two app commands from writing simultaneously; Sheets has no cell compare-and-swap here, so avoid manually editing the dedicated tab during a write. Existing tabs and formulas receive no update requests.
+
+Cover letters are optional drafts with evidence references returned separately. Review every statement; citation existence does not prove semantic support. Creating a letter after tracking does not silently change the existing tracker row; update it manually in the sandbox if needed. Application summaries list missing steps and never claim a submitted application. Voice, automated chains, broad Google actions and multiple agents remain deferred.

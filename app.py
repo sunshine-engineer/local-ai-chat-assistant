@@ -47,8 +47,10 @@ def generate_response(question, engine, temperature, max_tokens):
     llm=load_llm(engine,temperature,max_tokens)
     output_parser = StrOutputParser()
     chain=prompt | llm | output_parser
-    answer=chain.invoke({'question': question})
-    return answer
+    try:
+        return chain.invoke({'question': question})
+    except Exception:
+        return 'Local model unavailable. Check Ollama, OLLAMA_HOST and the installed model; /help lists available commands.'
 
 st.set_page_config(
     page_title="QA Chatbot",
