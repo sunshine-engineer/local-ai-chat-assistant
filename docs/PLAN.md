@@ -33,3 +33,8 @@ streamlit run app.py
 SQLite is the local default. Docker Compose supplies PostgreSQL and Ollama; PostgreSQL overrides the local DATABASE_URL setting; run `docker compose up --build -d` and `docker compose exec ollama ollama pull qwen3:1.7b`. CPU operation is supported; performance is hardware-dependent. Model installation and a real prompt are required to validate inference.
 
 Offline checks: `python -m unittest discover -s tests -v`.
+
+
+## Next acceptance priority
+
+The command flow, Google sandbox writes, read-only project ingestion, compact formatting and clean container image have been exercised. Model comparison quality remains a critical gap: real-JD tests produced valid JSON with unsupported judgments. Before reducing manual review, create representative reviewed comparison fixtures covering production qualifiers, partial skill coverage, name-only/irrelevant quotations, planned versus completed work, and independent portfolio versus commercial employment. Evaluate self-hosted models against those fixtures and block unsupported conclusions. A successful API call or exact quotation alone does not pass that gate. Voice and automation remain deferred.
