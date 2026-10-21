@@ -1,12 +1,10 @@
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from langchain_community.llms import ollama
-import streamlit as st 
+import streamlit as st
 import os
 from dotenv import load_dotenv
 load_dotenv()
-# from langchain_community.llms import ollama
-from langchain_ollama import OllamaLLM
+# from langchain_ollama import OllamaLLM
 
 from helpers import (create_chat_session,
                      save_message,
@@ -15,7 +13,7 @@ from helpers import (create_chat_session,
                      rename_chat_session,)
 
 
-# Variables 
+# Variables
 if "session_id" not in st.session_state:
     st.session_state.session_id = None
 
@@ -23,10 +21,8 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 
 
-# Langsmith Tracking
-os.environ["LANGCHAIN_API_KEY"]=os.getenv("LANGCHAIN_API_KEY")
-os.environ["LANGCHAIN_TRACKING_V2"] = "true"
-os.environ["LANGCHAIN_PROJECT"] = "QA Chatbot With Ollama"
+# Tracing is opt-in through environment variables.
+from assistant.runtime import build_registry
 
 # Creating a prompt template
 prompt = ChatPromptTemplate.from_messages(
@@ -39,12 +35,15 @@ prompt = ChatPromptTemplate.from_messages(
 @st.cache_resource
 def load_llm(engine,temperature,max_tokens):
     return OllamaLLM(model=engine,
-               base_url=os.getenv("OLLAMA_HOST"),
+               base_url=os.getenv("OLLAMA_HOST", "http://localhost:11434"),
                temperature=temperature,
                num_predict=max_tokens,
 )
 
 def generate_response(question, engine, temperature, max_tokens):
+    command_result = build_registry().execute(question)
+    if command_result is not None:
+        return command_result
     llm=load_llm(engine,temperature,max_tokens)
     output_parser = StrOutputParser()
     chain=prompt | llm | output_parser
@@ -60,10 +59,10 @@ st.set_page_config(
 # Title of the app
 st.title("Local AI Assistant")
 
-# Select the Open Source Model 
+# Select the Open Source Model
 # Adjust the response parameter
 st.sidebar.title("Chats")
-llm=st.sidebar.selectbox('Select an Open Source Model', ['phi3:mini'])
+llm=st.sidebar.selectbox('Select an Open Source Model', [os.getenv('OLLAMA_MODEL', 'phi3:mini')])
 temperature = st.sidebar.slider('Temperature', min_value=0.0, max_value=1.0,value=0.7)
 max_tokens = st.sidebar.slider("Max Tokens", min_value=50, max_value=300, value=150)
 
@@ -78,7 +77,7 @@ if st.sidebar.button("➕ New Chat"):
 sessions = get_sessions()
 if not sessions:
     st.sidebar.info("No chats yet. Create one!")
-    
+
 for chat in sessions:
 
     if st.sidebar.button(chat.title, key=chat.id):
@@ -92,7 +91,7 @@ for msg in st.session_state.messages:
         st.markdown(msg.message)
 
 
-# Main interface for the user input 
+# Main interface for the user input
 st.write("Ask any question")
 user_input=st.chat_input("Ask Anything : ")
 

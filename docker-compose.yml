@@ -8,22 +8,13 @@ services:
     restart: unless-stopped
 
     ports:
-      - "${OLLAMA_PORT}:11434"
+      - "127.0.0.1:${OLLAMA_PORT:-11434}:11434"
 
     volumes:
       - ollama-data:/root/.ollama
 
     environment:
-      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE}
-
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities:
-                - gpu
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-1m}
 
     healthcheck:
       test: ["CMD", "ollama", "list"]
@@ -42,22 +33,23 @@ services:
     build: .
     container_name: qa-chatbot
     restart: unless-stopped
+    command: ["sh", "-c", "python -m postgres.initialize && exec streamlit run app.py --server.port=8501 --server.address=0.0.0.0"]
     depends_on:
       ollama:
         condition: service_healthy
       postgres:
        condition: service_healthy
     ports:
-      - "8501:8501"
+      - "127.0.0.1:8501:8501"
     env_file:
       - .env
     environment:
       OLLAMA_HOST: http://ollama:11434
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: chatbot 
+      DB_NAME: chatbot
       DB_USER: chatbot
-      DB_PASSWORD: chatbot 
+      DB_PASSWORD: chatbot
 
   postgres:
     image: postgres:16
@@ -72,7 +64,7 @@ services:
       POSTGRES_PASSWORD: chatbot
 
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
 
     volumes:
       - postgres-data:/var/lib/postgresql/data

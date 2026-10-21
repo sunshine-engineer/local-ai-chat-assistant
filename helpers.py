@@ -1,62 +1,37 @@
+from sqlalchemy import select
+from postgres.db import SessionLocal, engine
+from postgres.models import Base, ChatSession, Message
 
-
-from postgres.db import SessionLocal
-from postgres.models import ChatSession, Message
-db = SessionLocal() # initializing database
+Base.metadata.create_all(bind=engine)
 
 
 def create_chat_session():
-
-    chat = ChatSession(
-        title="New Chat"
-    )
-
-    db.add(chat)
-    db.commit()
-    db.refresh(chat)
-    return chat.id
+    with SessionLocal.begin() as db:
+        chat = ChatSession(title='New Chat')
+        db.add(chat)
+        db.flush()
+        return chat.id
 
 
 def save_message(session_id, role, message):
-    msg = Message(
-        session_id=session_id,
-        role=role,
-        message=message
-    )
-    db.add(msg)
-    db.commit()
-    
+    with SessionLocal.begin() as db:
+        db.add(Message(session_id=session_id, role=role, message=message))
+
 
 def load_messages(session_id):
+    with SessionLocal() as db:
+        return list(db.scalars(select(Message).where(Message.session_id == session_id)
+                               .order_by(Message.created_at, Message.id)))
 
-    return (
-        db.query(Message)
-        .filter(Message.session_id == session_id)
-        .order_by(Message.created_at)
-        .all()
-    )
-    
 
 def get_sessions():
+    with SessionLocal() as db:
+        return list(db.scalars(select(ChatSession).order_by(ChatSession.created_at.desc())))
 
-    return (
-        db.query(ChatSession)
-        .order_by(ChatSession.created_at.desc())
-        .all()
-    )
-    
-    
-    
+
 def rename_chat_session(session_id, new_title):
-    chat = (
-        db.query(ChatSession)
-        .filter(ChatSession.id == session_id)
-        .first()
-    )
-
-    if chat:
-        chat.title = new_title
-        db.commit()
-
-    return chat
-
+    with SessionLocal.begin() as db:
+        chat = db.get(ChatSession, session_id)
+        if chat:
+            chat.title = new_title
+        return chat
