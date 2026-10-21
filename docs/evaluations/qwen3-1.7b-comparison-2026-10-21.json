@@ -1,0 +1,96 @@
+{
+  "cases": 8,
+  "fixture_passes": 2,
+  "invalid_responses": 1,
+  "automatic_acceptance_enabled": false,
+  "results": [
+    {
+      "case_id": "name_only",
+      "valid_response": true,
+      "status_matches_fixture": true,
+      "quote_matches_fixture": true,
+      "fixture_pass": true,
+      "flags": []
+    },
+    {
+      "case_id": "production_qualifier",
+      "valid_response": true,
+      "status_matches_fixture": false,
+      "quote_matches_fixture": true,
+      "fixture_pass": false,
+      "flags": [
+        "qualifier_not_established"
+      ]
+    },
+    {
+      "case_id": "partial_stack",
+      "valid_response": true,
+      "status_matches_fixture": false,
+      "quote_matches_fixture": true,
+      "fixture_pass": false,
+      "flags": [
+        "explicit_terms_missing"
+      ]
+    },
+    {
+      "case_id": "planned_work",
+      "valid_response": true,
+      "status_matches_fixture": false,
+      "quote_matches_fixture": false,
+      "fixture_pass": false,
+      "flags": [
+        "no_specific_term_overlap",
+        "explicit_terms_missing",
+        "qualifier_not_established"
+      ]
+    },
+    {
+      "case_id": "negated_experience",
+      "valid_response": false,
+      "fixture_pass": false
+    },
+    {
+      "case_id": "project_not_employment",
+      "valid_response": true,
+      "status_matches_fixture": false,
+      "quote_matches_fixture": true,
+      "fixture_pass": false,
+      "flags": [
+        "qualifier_not_established"
+      ]
+    },
+    {
+      "case_id": "supported_literal",
+      "valid_response": true,
+      "status_matches_fixture": true,
+      "quote_matches_fixture": true,
+      "fixture_pass": true,
+      "flags": []
+    },
+    {
+      "case_id": "explicit_gap",
+      "valid_response": true,
+      "status_matches_fixture": false,
+      "quote_matches_fixture": false,
+      "fixture_pass": false,
+      "flags": [
+        "no_specific_term_overlap",
+        "explicit_terms_missing",
+        "qualifier_not_established"
+      ]
+    }
+  ],
+  "limit": "Eight synthetic known-failure regressions, not a representative benchmark. Failed/invalid cases remain in the denominator. Human comparison review is always required, regardless of this result.",
+  "model": "qwen3:1.7b",
+  "context_tokens": 4096,
+  "fixture_digest": "71d6486cc681936bc242dd36184c0741935f0a33b8fcb37e7cf4463f5b94285c",
+  "policy_version": "comparison-review-v1",
+  "run_date": "2026-10-21",
+  "settings": {
+    "temperature": 0,
+    "think": false,
+    "context_tokens": 4096,
+    "output_token_limit": 4096
+  },
+  "note": "Diagnostic captured before the metadata-only fixture_digest/policy_version fields were added to the runner. Those identifiers were attached afterward from the unchanged fixture file. Synthetic fixture expectations are reviewable policy choices, not a representative human-labelled benchmark."
+}

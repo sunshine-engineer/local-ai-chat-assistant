@@ -1,0 +1,119 @@
+[
+  {
+    "id": "name_only",
+    "requirement": "Strong Python and FastAPI experience.",
+    "source": "Avery Example\nBuilt Python and FastAPI services.",
+    "quote": "Avery Example",
+    "kind": "resume",
+    "proposed_status": "supported",
+    "flags": [
+      "no_specific_term_overlap",
+      "explicit_terms_missing"
+    ],
+    "expected_status": "supported",
+    "expected_quotes": [
+      "Built Python and FastAPI services."
+    ]
+  },
+  {
+    "id": "production_qualifier",
+    "requirement": "Python and FastAPI in commercial production.",
+    "source": "Independent portfolio: Built Python and FastAPI services.",
+    "quote": "Independent portfolio: Built Python and FastAPI services.",
+    "kind": "resume",
+    "proposed_status": "supported",
+    "flags": [
+      "qualifier_not_established"
+    ],
+    "expected_status": "partial",
+    "expected_quotes": [
+      "Independent portfolio: Built Python and FastAPI services."
+    ]
+  },
+  {
+    "id": "partial_stack",
+    "requirement": "Python, FastAPI and MongoDB.",
+    "source": "Built Python and FastAPI services.",
+    "quote": "Built Python and FastAPI services.",
+    "kind": "resume",
+    "proposed_status": "supported",
+    "flags": [
+      "explicit_terms_missing"
+    ],
+    "expected_status": "partial",
+    "expected_quotes": [
+      "Built Python and FastAPI services."
+    ]
+  },
+  {
+    "id": "planned_work",
+    "requirement": "Kubernetes deployment.",
+    "source": "## Next steps\nAdd Kubernetes deployment.",
+    "quote": "Add Kubernetes deployment.",
+    "kind": "evidence",
+    "proposed_status": "supported",
+    "flags": [
+      "future_or_negated_context"
+    ],
+    "expected_status": "gap",
+    "expected_quotes": [
+      ""
+    ]
+  },
+  {
+    "id": "negated_experience",
+    "requirement": "Commercial production Kubernetes.",
+    "source": "No commercial production Kubernetes experience.",
+    "quote": "No commercial production Kubernetes experience.",
+    "kind": "resume",
+    "proposed_status": "supported",
+    "flags": [
+      "future_or_negated_context"
+    ],
+    "expected_status": "gap",
+    "expected_quotes": [
+      ""
+    ]
+  },
+  {
+    "id": "project_not_employment",
+    "requirement": "Commercial production Python.",
+    "source": "Commercial production Python prototype documentation.",
+    "quote": "Commercial production Python prototype documentation.",
+    "kind": "evidence",
+    "proposed_status": "supported",
+    "flags": [
+      "qualifier_not_established"
+    ],
+    "expected_status": "partial",
+    "expected_quotes": [
+      "Commercial production Python prototype documentation."
+    ]
+  },
+  {
+    "id": "supported_literal",
+    "requirement": "Python ETL.",
+    "source": "Built Python ETL pipelines in a commercial data engineering role.",
+    "quote": "Built Python ETL pipelines in a commercial data engineering role.",
+    "kind": "resume",
+    "proposed_status": "supported",
+    "flags": [],
+    "expected_status": "supported",
+    "expected_quotes": [
+      "Built Python ETL pipelines in a commercial data engineering role."
+    ]
+  },
+  {
+    "id": "explicit_gap",
+    "requirement": "Production Kubernetes.",
+    "source": "Built Python ETL pipelines.",
+    "quote": "",
+    "kind": "resume",
+    "proposed_status": "gap",
+    "flags": [],
+    "expected_status": "gap",
+    "expected_quotes": [
+      ""
+    ]
+  }
+]

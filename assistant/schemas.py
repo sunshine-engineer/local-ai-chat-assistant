@@ -52,8 +52,10 @@ def cited_properties(sources):
 
 
 def edits_for(text, sources):
-    return records('edits', {'before': {'type': 'string', 'enum': [q for q in quote_candidates(text) if text.count(q) == 1]},
-        'after': STRING, **cited_properties(sources)}, maximum=20)
+    from assistant.edit_policy import protected_edit
+    choices = [q for q in quote_candidates(text) if text.count(q) == 1 and not protected_edit(text, q)]
+    return records('edits', {'before': {'type': 'string', 'enum': choices} if choices else STRING,
+        'after': STRING, **cited_properties(sources)}, maximum=20 if choices else 0)
 
 
 def letter_for(sources):

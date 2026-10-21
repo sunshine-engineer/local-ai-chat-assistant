@@ -58,6 +58,10 @@ def initialize(jobs, arguments=''):
 
 
 def proposed_row(jobs, app_id, app):
+    from assistant.comparison_review import reviewed_sources
+    reviewed_sources(app)
+    from assistant.package import included_letter_url
+    letter = included_letter_url(jobs, app)
     draft = app.get('draft', {})
     if not app.get('reviewed') or not draft.get('ready') or app.get('pending_edits'):
         raise ValueError('Review the resume and run /approve_resume before tracking.')
@@ -67,7 +71,7 @@ def proposed_row(jobs, app_id, app):
     data = app['input']
     date = app.get('prepared_date') or datetime.now(ZoneInfo('Asia/Kolkata')).date().isoformat()
     return dict(zip(KEYS, [app_id, data.get('company', ''), data.get('role', ''), data.get('url', ''),
-        app.get('jd_url', ''), draft['url'], app.get('cover_letter_url', ''), 'Prepared', date]))
+        app.get('jd_url', ''), draft['url'], letter, 'Prepared', date]))
 
 
 def track(jobs, arguments):

@@ -44,3 +44,24 @@ class ResumeTest(unittest.TestCase):
         self.assertEqual(doc_style['tabId'], 'new-tab')
         named_style = next(r['updateNamedStyle'] for r in requests if 'updateNamedStyle' in r)
         self.assertEqual(named_style['tabId'], 'new-tab')
+
+    def test_tailoring_protects_detected_name_and_contact_lines(self):
+        text='Avery Example\nuser@example.com\nBuilt Python ETL.\n'
+        source=[{'id':'r','text':'Built Python ETL.'}]
+        for before in ('Avery Example','user@example.com','Avery'):
+            edit={'before':before,'after':'Python engineer','source_id':'r','quote':'Built Python ETL.'}
+            with self.assertRaisesRegex(ValueError,'name/contact'):
+                validate_edits({'edits':[edit]},text,source)
+        from assistant.schemas import edits_for
+        choices=edits_for(text,source)['properties']['edits']['items']['properties']['before']['enum']
+        self.assertEqual(choices,['Built Python ETL.'])
+        from jsonschema import Draft202012Validator
+        schema=edits_for('Avery Example\nuser@example.com\n',source)
+        Draft202012Validator.check_schema(schema)
+        self.assertEqual(schema['properties']['edits']['maxItems'],0)
+
+    def test_unsupported_new_numeric_claims_are_rejected(self):
+        source=[{'id':'r','text':'Built Python ETL.'}]
+        edit={'before':'Built Python ETL.','after':'Built 100 Python ETL pipelines.','source_id':'r','quote':'Built Python ETL.'}
+        with self.assertRaisesRegex(ValueError,'numerical claims'):
+            validate_edits({'edits':[edit]},'Built Python ETL.\n',source)
