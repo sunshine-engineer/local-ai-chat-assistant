@@ -77,6 +77,7 @@ The initial copier supports paragraph/text resumes with page and named styles. C
 - [Manual test report template](docs/TEST_REPORT_TEMPLATE.md)
 - [Current validation and limitations](docs/VALIDATION.md)
 - [Module plan and boundaries](docs/PLAN.md)
+- [How to add a module or command](docs/EXTENDING.md)
 
 ## Validation
 
