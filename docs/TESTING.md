@@ -14,7 +14,7 @@ The PRs are stacked. Test the latest stack branch to exercise all modules withou
 
 ```bash
 git fetch origin
-git switch feat/testing-and-recovery
+git switch fix/live-validation
 ```
 
 If you already have uncommitted work, preserve it before switching. Review/merge order is documented in [REVIEW.md](REVIEW.md). Do not merge to run these tests.
@@ -88,15 +88,18 @@ if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 if [ ! -f .env ]; then cp .env.example .env; fi
 ```
 
-Start Ollama using your installation's normal method, then:
+Run Ollama in Docker; no host Ollama installation is needed:
 
 ```bash
-ollama list
-ollama pull phi3:mini
+docker compose up -d ollama
+docker compose exec ollama ollama list
+docker compose exec ollama ollama pull qwen3:1.7b
 python -m assistant.cli /status
 ```
 
-Pull only if that model is not installed. It is the inherited configurable default, not a quality-approved choice. Expected: `/status` reports a reachable service and lists the model matching `OLLAMA_MODEL`. `OLLAMA_HOST` defaults to `http://localhost:11434` for local execution. See [COMMANDS.md](COMMANDS.md) for context-budget settings.
+For the full container app, run `docker compose up --build -d` and open `http://localhost:8501`. The first build downloads Python dependencies and can take time. Complete Desktop OAuth using the host CLI before starting Google commands in the container; both use the repository's private `.assistant` directory. Keep the browser callback on the host.
+
+Pull only if that model is not installed. It is the tested local smoke-test baseline; it still requires factual review and hardware-specific measurement. Expected: `/status` reports a reachable service and lists the model matching `OLLAMA_MODEL`. `OLLAMA_HOST` defaults to `http://localhost:11434` for local execution. See [COMMANDS.md](COMMANDS.md) for context-budget settings.
 
 ### Google account and copies
 
@@ -218,12 +221,26 @@ Do not delete `.assistant` to recover a failed command: that removes local check
 | `/status` reports unavailable | Start Ollama; check OLLAMA_HOST and `ollama list` |
 | Model input exceeds budget | Narrow resume tabs/evidence; adjust model/context only after measuring memory and quality |
 | Google not connected / expired | Run the desktop OAuth command again; do not put tokens into `.env` or chat |
+| Google 403 org_internal | Set Audience to External/Testing and add your personal account as a test user |
 | Google HTTP 403 | Check enabled APIs, OAuth scopes and permission on the sandbox copies |
 | Sandbox write refused | Confirm the copied document/workbook is directly inside the configured folder |
 | Unsupported resume structure | Use a paragraph/text template; tables/lists/embedded objects are not copied by this version |
 | Unexpected tracker headers | Use the dedicated Assistant Applications tab; do not overwrite your existing custom tracker |
 | Another command running | Let it finish, then retry; do not start a second instance with separate state |
 
-## 6. Record the result
+## 6. Optional real-service regression tests
+
+These tests are separate from the default suite. Use an isolated PostgreSQL database named `assistant_test`; the test creates chat records. Point the model URL at your Docker Ollama endpoint. In Bash:
+
+```bash
+export ASSISTANT_LIVE_OLLAMA=http://127.0.0.1:11434
+export ASSISTANT_LIVE_MODEL=qwen3:1.7b
+export ASSISTANT_LIVE_DATABASE_URL=postgresql+psycopg2://TEST_USER:TEST_PASSWORD@127.0.0.1:TEST_PORT/assistant_test
+python -m unittest discover -s tests/live -v
+```
+
+In PowerShell set the same names with `$env:NAME = 'value'`. Omit the database variable to skip that test. These checks exercise real chat, a synthetic supported/gap comparison, and database persistence; they do not run Google writes. Run model checks serially to avoid CPU queueing. For Google acceptance, use the manual command sequence above against sandbox copies.
+
+## 7. Record the result
 
 Use [TEST_REPORT_TEMPLATE.md](TEST_REPORT_TEMPLATE.md) for review evidence. Distinguish offline pass, actual app OAuth execution, connector-only checks, real model checks and manual PDF review. A missing credential/service is **not run**, not pass. See [VALIDATION.md](VALIDATION.md) for the current development snapshot.

@@ -4,7 +4,7 @@ import streamlit as st
 import os
 from dotenv import load_dotenv
 load_dotenv()
-# from langchain_ollama import OllamaLLM
+from langchain_ollama import OllamaLLM
 
 from helpers import (create_chat_session,
                      save_message,
@@ -35,6 +35,7 @@ prompt = ChatPromptTemplate.from_messages(
 @st.cache_resource
 def load_llm(engine,temperature,max_tokens):
     return OllamaLLM(model=engine,
+               reasoning=False,
                base_url=os.getenv("OLLAMA_HOST", "http://localhost:11434"),
                temperature=temperature,
                num_predict=max_tokens,
@@ -64,7 +65,7 @@ st.title("Local AI Assistant")
 # Select the Open Source Model
 # Adjust the response parameter
 st.sidebar.title("Chats")
-llm=st.sidebar.selectbox('Select an Open Source Model', [os.getenv('OLLAMA_MODEL', 'phi3:mini')])
+llm=st.sidebar.selectbox('Select an Open Source Model', [os.getenv('OLLAMA_MODEL', 'qwen3:1.7b')])
 temperature = st.sidebar.slider('Temperature', min_value=0.0, max_value=1.0,value=0.7)
 max_tokens = st.sidebar.slider("Max Tokens", min_value=50, max_value=300, value=150)
 

@@ -1,6 +1,7 @@
 import json
 from assistant.evidence import digest
 from assistant.model import generate_json
+from assistant.schemas import letter_for
 
 
 def cover_letter(jobs, arguments, model=generate_json):
@@ -9,9 +10,9 @@ def cover_letter(jobs, arguments, model=generate_json):
         raise ValueError('Run /compare_resume first to establish source evidence.')
     if not app.get('cover_letter_draft'):
         output = model('Return {"paragraphs":[{"text":"one cover-letter paragraph","source_id":"supplied source ID",'
-            '"quote":"exact supporting source quote"}]}. Write 2–4 concise paragraphs. Each paragraph must be supported by its source. '
-            'Do not invent experience, metrics, names or employers. Distinguish independent GenAI projects from commercial data engineering. '
-            'No greeting or signature; those are handled separately.', {'jd': app['input']['jd'], 'sources': app['source_snapshot']})
+            '"quote":"exact supporting source quote"}]}. Write 2–4 concise first-person cover-letter paragraphs, at most 200 words in total, in the voice of the candidate, using I/my. Address the role directly; never describe or summarize the resume. Each paragraph must be supported by its source. '
+            'Do not invent experience, metrics, names or employers. Do not add scale, scalability, multiple data sources, business impact, deployment or expertise claims unless the quoted source explicitly states them. Prefer modest literal wording over embellishment. Distinguish independent GenAI projects from commercial data engineering. '
+            'No greeting or signature; those are handled separately.', {'jd': app['input']['jd'], 'sources': app['source_snapshot']}, schema=letter_for(app['source_snapshot']))
         paragraphs = output.get('paragraphs')
         if not isinstance(paragraphs, list) or not 2 <= len(paragraphs) <= 4:
             raise ValueError('Model must supply 2–4 cited cover-letter paragraphs.')

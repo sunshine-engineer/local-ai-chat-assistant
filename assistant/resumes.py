@@ -3,6 +3,7 @@ import json
 from assistant.evidence import digest
 from assistant.google import tabs, body_text
 from assistant.model import generate_json
+from assistant.schemas import edits_for
 from assistant.state import json_input
 
 
@@ -161,8 +162,8 @@ def suggest(jobs, arguments, model=generate_json):
     output = model('Return {"edits":[{"before":"unique exact resume text","after":"replacement within same paragraph",'
         '"source_id":"supplied source ID","quote":"exact source evidence"}]}. Maximum 20 edits. '
         'Use only supplied facts. No invented metrics, employers, skills, years, or commercial GenAI experience. '
-        'Improve relevance to the JD. Preserve personal portfolio versus employment distinction.',
-        {'jd': app['input']['jd'], 'resume': text, 'sources': app['source_snapshot']})
+        'Improve relevance to the JD. Preserve personal portfolio versus employment distinction. before and after must contain no newline characters and must differ. Return edits:[] when there is no useful supported change.',
+        {'jd': app['input']['jd'], 'resume': text, 'sources': app['source_snapshot']}, schema=edits_for(text, app['source_snapshot']))
     edits = validate_edits(output, text, app['source_snapshot'])
     app['suggestions'] = {'base_text': text, 'edits': edits}
     app['reviewed'] = False

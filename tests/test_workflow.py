@@ -84,7 +84,7 @@ class Cloud:
         raise AssertionError((method, url))
 
 
-def comparison_model(instruction, data):
+def comparison_model(instruction, data, **kwargs):
     if 'jd' in data:
         return {'requirements': ['Python']}
     return {'matches': [{'requirement': 'Python', 'status': 'supported', 'quote': 'Built Python ETL'}]}
@@ -109,7 +109,7 @@ class WorkflowTest(unittest.TestCase):
     def test_full_manual_flow_and_retries(self):
         resumes.draft(self.jobs, self.app_id)
         source_before = copy.deepcopy(self.cloud.doc['tabs'][0])
-        resumes.suggest(self.jobs, self.app_id, lambda *args: {'edits': [{'before': 'Built Python ETL',
+        resumes.suggest(self.jobs, self.app_id, lambda *args, **kwargs: {'edits': [{'before': 'Built Python ETL',
             'after': 'Built Python ETL workflows', 'source_id': 'resume-copy:source', 'quote': 'Built Python ETL'}]})
         command = json.dumps({'application_id': self.app_id, 'edit_ids': [0], 'reviewed': True})
         # Simulate ambiguous remote success: state must reconcile rather than repeat edits.
@@ -144,11 +144,11 @@ class WorkflowTest(unittest.TestCase):
         self.assertEqual(self.cloud.document_writes, 0)
 
     def test_cover_letter_citations_and_retry(self):
-        def model(*args):
+        def model(*args, **kwargs):
             return {'paragraphs': [{'text': 'I build Python ETL workflows.', 'source_id': 'resume-copy:source',
                                     'quote': 'Built Python ETL'}] * 2}
         package.cover_letter(self.jobs, self.app_id, model)
-        def should_not_run(*args):
+        def should_not_run(*args, **kwargs):
             raise AssertionError('Regenerated instead of retrying saved draft')
         result = package.cover_letter(self.jobs, self.app_id, should_not_run)
         self.assertIn('draft_url', result)
@@ -171,7 +171,7 @@ class WorkflowTest(unittest.TestCase):
 
     def test_reset_after_conflict_preserves_external_edit_and_invalidates_review(self):
         resumes.draft(self.jobs, self.app_id)
-        resumes.suggest(self.jobs, self.app_id, lambda *args: {'edits': [{'before': 'Built Python ETL',
+        resumes.suggest(self.jobs, self.app_id, lambda *args, **kwargs: {'edits': [{'before': 'Built Python ETL',
             'after': 'Built Python ETL workflows', 'source_id': 'resume-copy:source', 'quote': 'Built Python ETL'}]})
         self.cloud.doc['tabs'][1] = make_tab('draft', 'Human-reviewed external content\n')
         apply_command = json.dumps({'application_id': self.app_id, 'edit_ids': [0], 'reviewed': True})
@@ -193,7 +193,7 @@ class WorkflowTest(unittest.TestCase):
     def test_comparison_cannot_replace_evidence_behind_existing_draft(self):
         resumes.draft(self.jobs, self.app_id)
         before = self.jobs.application(self.app_id)[1]['comparison']
-        def should_not_run(*args):
+        def should_not_run(*args, **kwargs):
             raise AssertionError('Comparison should stop before invoking model')
         with self.assertRaisesRegex(ValueError, 'fixed once a draft'):
             evidence.compare(self.jobs, self.app_id, should_not_run)
