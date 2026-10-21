@@ -28,6 +28,7 @@ class Jobs:
             ('draft_resume', 'Copy the recommended resume into a new sandbox tab.', lambda a: resumes.draft(self, a)),
             ('suggest_edits', 'Suggest cited resume changes without writing to Google.', lambda a: resumes.suggest(self, a)),
             ('apply_edits', 'Apply selected reviewed edit IDs from a JSON payload.', lambda a: resumes.apply(self, a)),
+            ('reset_edits', 'Keep current draft and discard local suggestions/pending edits after review.', lambda a: resumes.reset(self, a)),
             ('approve_resume', 'Record your review of draft content and layout.', lambda a: resumes.approve(self, a)),
             ('refresh_sources', 'Read configured reference files and resume tabs.', lambda a: evidence.refresh(self, a)),
             ('show_sources', 'List source catalogue and skipped files.', lambda a: evidence.show(self, a)),
@@ -84,6 +85,8 @@ class Jobs:
         return value
 
     def application(self, arguments):
+        if not isinstance(arguments, str):
+            raise ValueError('Application ID must be a string.')
         app_id = arguments.strip()
         app = self.store.get('app:' + app_id)
         if not app:

@@ -13,9 +13,11 @@ def main():
         payload = sys.stdin.read().strip()
         if payload:
             text += ' ' + payload
-    result = build_registry().execute(text)
+    registry = build_registry()
+    result = registry.execute(text)
     print(result if result is not None else 'Provide a command; use /help.')
+    return 2 if result is None else (1 if registry.last_error else 0)
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

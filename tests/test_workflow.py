@@ -168,3 +168,37 @@ class WorkflowTest(unittest.TestCase):
         self.jobs.store.put('protected_original_ids', ['original-resume'])
         with self.assertRaisesRegex(ValueError, 'original resource'):
             self.jobs.configure('{"resume_doc_id":"original-resume"}')
+
+    def test_reset_after_conflict_preserves_external_edit_and_invalidates_review(self):
+        resumes.draft(self.jobs, self.app_id)
+        resumes.suggest(self.jobs, self.app_id, lambda *args: {'edits': [{'before': 'Built Python ETL',
+            'after': 'Built Python ETL workflows', 'source_id': 'resume-copy:source', 'quote': 'Built Python ETL'}]})
+        self.cloud.doc['tabs'][1] = make_tab('draft', 'Human-reviewed external content\n')
+        apply_command = json.dumps({'application_id': self.app_id, 'edit_ids': [0], 'reviewed': True})
+        with self.assertRaisesRegex(ValueError, 'changed after suggestions'):
+            resumes.apply(self.jobs, apply_command)
+        writes = self.cloud.document_writes
+        with self.assertRaises(ValueError):
+            resumes.reset(self.jobs, json.dumps({'application_id': self.app_id}))
+        resumes.reset(self.jobs, json.dumps({'application_id': self.app_id, 'keep_current': True}))
+        self.assertEqual(self.cloud.document_writes, writes)
+        app = self.jobs.application(self.app_id)[1]
+        self.assertEqual(app['draft']['text'], 'Human-reviewed external content\n')
+        self.assertFalse(app['reviewed'])
+        self.assertIsNone(app['pending_edits'])
+        self.assertNotIn('suggestions', app)
+        self.assertEqual(len(app['abandoned_edit_batches']), 1)
+        resumes.approve(self.jobs, self.app_id)
+
+    def test_comparison_cannot_replace_evidence_behind_existing_draft(self):
+        resumes.draft(self.jobs, self.app_id)
+        before = self.jobs.application(self.app_id)[1]['comparison']
+        def should_not_run(*args):
+            raise AssertionError('Comparison should stop before invoking model')
+        with self.assertRaisesRegex(ValueError, 'fixed once a draft'):
+            evidence.compare(self.jobs, self.app_id, should_not_run)
+        self.assertEqual(self.jobs.application(self.app_id)[1]['comparison'], before)
+
+    def test_invalid_application_id_type_is_a_validation_error(self):
+        with self.assertRaisesRegex(ValueError, 'must be a string'):
+            self.jobs.application(123)

@@ -84,3 +84,10 @@ Suggestions cite exact source excerpts but their factual meaning is not mechanic
 Tracking first previews the proposed row. `--write` saves only after current resume approval. Dates use Asia/Kolkata. Status is Prepared, never Applied. The command checks duplicate application IDs and job URLs, refuses occupied/formula-containing reserved rows, writes RAW text and reads back the exact row. Capacity is 999 entries. Local state locking prevents two app commands from writing simultaneously; Sheets has no cell compare-and-swap here, so avoid manually editing the dedicated tab during a write. Existing tabs and formulas receive no update requests.
 
 Cover letters are optional drafts with evidence references returned separately. Review every statement; citation existence does not prove semantic support. Creating a letter after tracking does not silently change the existing tracker row; update it manually in the sandbox if needed. Application summaries list missing steps and never claim a submitted application. Voice, automated chains, broad Google actions and multiple agents remain deferred.
+
+
+## Recover from a conflicting external edit
+
+`/reset_edits {"application_id":"APPLICATION_ID","keep_current":true}` reads the current draft, preserves it remotely, clears local suggestions/pending edit state and invalidates approval. Inspect the current draft before using it. It does not undo remote edits. Then generate new suggestions or review and approve again. Recomparison is blocked once a draft exists, preserving the draft's evidence snapshot.
+
+See [TESTING.md](TESTING.md) for the full Windows/WSL walkthrough, retry checks, model quality checks and failure expectations.

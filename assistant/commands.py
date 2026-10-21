@@ -13,6 +13,7 @@ class Action:
 class CommandRegistry:
     def __init__(self):
         self.actions = {}
+        self.last_error = False
         self.register(Action('help', 'List available commands.', self.help))
 
     def register(self, action):
@@ -25,6 +26,7 @@ class CommandRegistry:
 
     def execute(self, text):
         """Return None for ordinary chat; commands never fall through to an LLM."""
+        self.last_error = False
         text = text.strip()
         if not text.startswith('/'):
             return None
@@ -33,8 +35,10 @@ class CommandRegistry:
         arguments = parts[1] if len(parts) > 1 else ''
         action = self.actions.get(name)
         if action is None:
+            self.last_error = True
             return f'Unknown command /{name}. Use /help.'
         try:
             return action.handler(arguments)
         except (ValueError, OSError) as exc:
+            self.last_error = True
             return f'Action failed: {exc}'

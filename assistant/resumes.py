@@ -231,3 +231,24 @@ def approve(jobs, arguments):
     app.update({'reviewed': True, 'approved_text_hash': digest(text)})
     jobs.save(app_id, app)
     return 'Your review of content and layout has been recorded. ' + state['url']
+
+
+def reset(jobs, arguments):
+    """Explicitly abandon local edits; never roll back or change the Google draft."""
+    data = json_input(arguments)
+    if data.get('keep_current') is not True:
+        raise ValueError('Inspect the current Google draft and supply keep_current:true to discard local edit state.')
+    app_id, app = jobs.application(data.get('application_id', ''))
+    state = app.get('draft', {})
+    if not state.get('ready'):
+        raise ValueError('A completed draft is required before resetting edit state.')
+    doc = jobs.google.document(state['doc_id'])
+    text = body_text(find_tab(doc, state['tab_id'])['documentTab']['body'])
+    if app.get('pending_edits'):
+        app.setdefault('abandoned_edit_batches', []).append(app['pending_edits'])
+    state['text'] = text
+    app.update({'pending_edits': None, 'reviewed': False})
+    for key in ('suggestions', 'applied_signature', 'applied_suggestions', 'approved_text_hash'):
+        app.pop(key, None)
+    jobs.save(app_id, app)
+    return 'Current Google draft preserved. Local edit state cleared; generate new suggestions or review and approve again. ' + state['url']

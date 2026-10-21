@@ -44,3 +44,17 @@ class JobsTest(unittest.TestCase):
                 self.store.put('checkpoint', 'saved')
                 raise ValueError('network')
         self.assertEqual(Store(self.temp.name).get('checkpoint'), 'saved')
+
+    def test_transaction_rolls_back_and_connection_closes(self):
+        import sqlite3
+        with self.assertRaisesRegex(ValueError, 'abort'):
+            with self.store.connect() as db:
+                db.execute('INSERT INTO records VALUES (?, ?)', ('uncommitted', '123'))
+                raise ValueError('abort')
+        self.assertIsNone(self.store.get('uncommitted'))
+        with self.assertRaises(sqlite3.ProgrammingError):
+            db.execute('SELECT 1')
+        with self.store.action_lock():
+            self.store.put('after_failure', 'saved')
+        with self.store.action_lock():
+            self.assertEqual(self.store.get('after_failure'), 'saved')

@@ -11,7 +11,7 @@ A single-user, command-first assistant built with Python, Streamlit, Ollama and 
 | JD capture | `/save_jd` | Original text preserved in a new Google Doc |
 | Source catalogue | `/refresh_sources`, `/show_sources` | Selected resume tabs, Docs, local Markdown/text |
 | Resume comparison | `/compare_resume` | Source quotes validated; judgments require review |
-| Resume tailoring | `/draft_resume`, `/suggest_edits`, `/apply_edits`, `/approve_resume` | New tab; explicit reviewed edits only |
+| Resume tailoring | `/draft_resume`, `/suggest_edits`, `/apply_edits`, `/reset_edits`, `/approve_resume` | New tab; explicit reviewed edits only |
 | Tracking | `/init_tracker`, `/track_application` | Dedicated tab in copied workbook; Prepared status |
 | Application package | `/draft_cover_letter`, `/application_summary` | Optional letter; no automatic submission |
 
@@ -66,6 +66,15 @@ Workflow state is private local SQLite under `.assistant/`; chat history uses th
 
 The initial copier supports paragraph/text resumes with page and named styles. Complex native structures are rejected before writing. PDF/page-fit review is manual. Do not expose this single-user app publicly without adding authentication and per-user credential/state isolation.
 
+## Documentation
+
+- [Setup and exact command payloads](docs/COMMANDS.md)
+- [How to test: Windows/WSL, sandbox walkthrough and recovery](docs/TESTING.md)
+- [Review and merge the PR stack](docs/REVIEW.md)
+- [Manual test report template](docs/TEST_REPORT_TEMPLATE.md)
+- [Current validation and limitations](docs/VALIDATION.md)
+- [Module plan and boundaries](docs/PLAN.md)
+
 ## Validation
 
 ```bash
@@ -73,3 +82,5 @@ python -m unittest discover -s tests -v
 ```
 
 Tests include a complete manual workflow with Google/model doubles, interrupted-write reconciliation, citation checks, preserved source tabs, Unicode edit ranges and tracker duplicate/formula protections. See [validation status](docs/VALIDATION.md) for the distinction between offline coverage and live checks, and [module plan](docs/PLAN.md) for scope.
+
+CLI exit codes: 0 for a handled command, 1 for an unknown command/action failure, 2 for missing or non-command input. `/status` reports connectivity in its message. See the testing guide for exact expectations.

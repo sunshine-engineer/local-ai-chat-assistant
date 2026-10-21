@@ -103,6 +103,8 @@ def validate_matches(output, requirements, source_text):
 
 def compare(jobs, arguments, model=generate_json):
     app_id, app = jobs.application(arguments)
+    if app.get('draft'):
+        raise ValueError('Comparison is fixed once a draft is created. Continue reviewing that draft; use a new JD input for a separate application variant.')
     catalogue = jobs.store.get('catalogue')
     if not catalogue:
         raise ValueError('Run /refresh_sources first.')

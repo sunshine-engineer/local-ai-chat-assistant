@@ -2,7 +2,7 @@
 import json
 import os
 import sqlite3
-from contextlib import contextmanager
+from contextlib import contextmanager, closing
 from pathlib import Path
 
 
@@ -15,8 +15,11 @@ class Store:
             db.execute('CREATE TABLE IF NOT EXISTS records (key TEXT PRIMARY KEY, value TEXT NOT NULL)')
         self.path.chmod(0o600)
 
+    @contextmanager
     def connect(self):
-        return sqlite3.connect(self.path, timeout=5)
+        # sqlite3.Connection.__exit__ commits/rolls back but does not close it.
+        with closing(sqlite3.connect(self.path, timeout=5)) as db, db:
+            yield db
 
     def get(self, key, default=None):
         with self.connect() as db:
@@ -30,7 +33,7 @@ class Store:
     @contextmanager
     def action_lock(self):
         # Separate DB: state checkpoints survive a failed network call.
-        with sqlite3.connect(self.root / 'lock.sqlite3', timeout=1) as db:
+        with closing(sqlite3.connect(self.root / 'lock.sqlite3', timeout=1)) as db, db:
             try:
                 db.execute('BEGIN IMMEDIATE')
             except sqlite3.OperationalError as exc:
