@@ -17,4 +17,6 @@ def model_status(arguments=''):
 def build_registry():
     registry = CommandRegistry()
     registry.register(Action('status', 'Check local model connectivity.', model_status))
+    from assistant.jobs import Jobs
+    Jobs().register(registry)
     return registry

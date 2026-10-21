@@ -13,3 +13,6 @@ venv/
 logs/
 
 .env.local
+.assistant/
+credentials*.json
+token*.json
