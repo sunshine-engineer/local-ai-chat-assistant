@@ -14,7 +14,7 @@ The PRs are stacked. Test the latest stack branch to exercise all modules withou
 
 ```bash
 git fetch origin
-git switch fix/reviewed-requirements
+git switch feat/readonly-project-evidence
 ```
 
 If you already have uncommitted work, preserve it before switching. Review/merge order is documented in [REVIEW.md](REVIEW.md). Do not merge to run these tests.
@@ -254,3 +254,12 @@ In PowerShell set the same names with `$env:NAME = 'value'`. Omit the database v
 ## 7. Record the result
 
 Use [TEST_REPORT_TEMPLATE.md](TEST_REPORT_TEMPLATE.md) for review evidence. Distinguish offline pass, actual app OAuth execution, connector-only checks, real model checks and manual PDF review. A missing credential/service is **not run**, not pass. See [VALIDATION.md](VALIDATION.md) for the current development snapshot.
+
+
+## Read-only project-evidence acceptance
+
+1. Point `ASSISTANT_EVIDENCE_DIR` at the intended reference folder and recreate the app container. An incorrect/missing path must fail instead of creating an empty source directory.
+2. Configure only actual project-document subfolders under `/evidence` in `local_source_dirs`. Run catalogue refresh inside the container; compare each ingested Markdown/text value with its source file.
+3. Inspect Docker mount metadata: `/evidence` must have `RW: false`. A host-file hash comparison before/after ingestion should match. Tests must not attempt to overwrite original files just to check read-only behavior.
+4. Compare a reviewed required/desirable skill and a commercial-production requirement without evidence. Project results must remain separate from resume experience and never prove employment/deployment by themselves. Inspect quotations and statuses manually; a structurally valid result is not a semantic-quality pass.
+5. Confirm the UI and CLI share the same private workflow state and that Google outputs remain sandbox-only.

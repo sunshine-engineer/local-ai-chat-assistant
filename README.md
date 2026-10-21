@@ -34,6 +34,8 @@ streamlit run app.py
 
 On Windows use `.venv\Scripts\activate` for activation. Local chat history defaults to SQLite. No paid model API or LangSmith key is required. The default model is qwen3:1.7b, exercised locally against synthetic data and a copied resume. This is a limited smoke test, not a quality benchmark; review generated claims and evaluate your own hardware.
 
+For Docker reference files, set `ASSISTANT_EVIDENCE_DIR` in private `.env`; the app sees that folder read-only at `/evidence`. Configure a relevant subfolder in `local_source_dirs` and refresh sources inside the container. See [project evidence setup](docs/COMMANDS.md#local-project-evidence-in-docker).
+
 Docker alternative: `docker compose up --build -d`, then `docker compose exec ollama ollama pull qwen3:1.7b`. Compose uses PostgreSQL and CPU-capable Ollama by default. It binds services to localhost and mounts private workflow state. Authenticate using the local CLI before starting the container; browser OAuth inside Docker is not supported.
 
 ## Configure and use commands

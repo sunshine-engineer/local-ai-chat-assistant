@@ -45,6 +45,12 @@ services:
       - .env
     volumes:
       - ./.assistant:/app/.assistant
+      - type: bind
+        source: ${ASSISTANT_EVIDENCE_DIR:-./examples}
+        target: /evidence
+        read_only: true
+        bind:
+          create_host_path: false
     environment:
       DATABASE_URL: postgresql+psycopg2://chatbot:chatbot@postgres:5432/chatbot
       OLLAMA_HOST: http://ollama:11434

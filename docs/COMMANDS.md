@@ -128,3 +128,22 @@ The previous automatic extraction passed structural checks while selecting a mar
 Reselecting requirements before a draft clears the old comparison and source snapshot. A changed JD invalidates review. More than 200 candidates requires a shorter JD; more than 30 selected candidates is rejected without truncation. Once a resume or letter draft exists, use a new application variant instead of changing its evidence scope.
 
 `ASSISTANT_REQUIREMENT_BATCH_SIZE` defaults to 3 and accepts 1–5. Smaller batches reduce per-call output size, but a full comparison can take several minutes per resume on CPU. Every selected requirement must have exactly one validated match; missing or duplicate matches fail without saving a partial comparison.
+
+
+## Local project evidence in Docker
+
+Set `ASSISTANT_EVIDENCE_DIR` in your private `.env` to the host reference folder. Use the path syntax for the shell running Compose: an absolute `/mnt/c/...` path in WSL, or `C:/...` in Windows. Quote values containing spaces. Compose mounts it at `/evidence` read-only and refuses to create a missing host directory. Recreate the app container after changing this setting.
+
+Configure `local_source_dirs` using paths **inside** the app container, such as `/evidence/projects`. Choose the directory containing actual project case studies or READMEs; exclude templates, maintenance instructions and aspirational notes. The catalogue reads Markdown/text recursively. Unsupported formats are not converted by this version.
+
+Run command payloads in that same container so their paths resolve consistently:
+
+```bash
+docker compose exec -T chatbot python -m assistant.cli /configure < private-config.json
+docker compose exec -T chatbot python -m assistant.cli /refresh_sources
+docker compose exec -T chatbot python -m assistant.cli /show_sources
+```
+
+PowerShell: `Get-Content -Raw private-config.json | docker compose exec -T chatbot python -m assistant.cli /configure`.
+
+The browser OAuth command still runs on the host, with private `.assistant` state shared into the app. A host Python UI/CLI uses actual host paths in `local_source_dirs`; `/evidence` is only the container mount. Do not alternate host and container catalogue refresh commands against one configuration whose paths only exist in one environment.
