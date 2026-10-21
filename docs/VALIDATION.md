@@ -3,8 +3,9 @@
 ## Confirmed
 
 - Repository cloned locally; module branches and review PRs created without merging.
-- 18 offline unit/integration tests pass, including manual workflow execution using explicit in-memory Google and model doubles.
-- Streamlit initial rendering and /help submission pass in AppTest; CLI /help works.
+- 25 offline unit/integration tests pass, including manual workflow execution using explicit in-memory Google and model doubles.
+- Automated Streamlit AppTest covers initial rendering, /help, unknown commands and history across reruns. CLI subprocess tests cover JSON stdin, success/failure exit codes and private state isolation.
+- Conflict recovery preserves the remote draft, discards only local edit state and requires renewed review. Comparisons cannot replace the evidence snapshot behind an existing draft. SQLite connections close on success/failure; transaction rollback and lock reuse are tested.
 - Three user-supplied Google files were copied into a temporary Drive sandbox using the connected Google Drive plugin, then listed/read back. Original files received no write requests.
 - A general resume was copied into a new sandbox-only validation tab using the application's request builder and Google Docs batchUpdate via the connector. Content readback matches; the preceding 36 sandbox tabs' body, page and named styles are unchanged.
 - Live request validation caught and corrected a page-size field mismatch and a read-only header/footer style flag. Page and named style requests now succeed on the inspected template.
@@ -23,3 +24,7 @@
 - Sandbox writes only. Existing tracker sheets are preserved; new rows go into a dedicated Assistant Applications tab in the copied workbook.
 - No source truth/semantic entailment guarantee: the app validates source quote existence, and requires human review before edits and tracking.
 - No voice, automation, MCP client or autonomous multi-agent runtime in this phase.
+
+## Reproduce and review
+
+Follow [TESTING.md](TESTING.md), record sanitized outcomes with [TEST_REPORT_TEMPLATE.md](TEST_REPORT_TEMPLATE.md), and use [REVIEW.md](REVIEW.md) for the unmerged PR stack.
