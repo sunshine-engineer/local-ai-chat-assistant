@@ -14,7 +14,7 @@ The PRs are stacked. Test the latest stack branch to exercise all modules withou
 
 ```bash
 git fetch origin
-git switch feat/comparison-review-controls
+git switch feat/comparison-review-viewer
 ```
 
 If you already have uncommitted work, preserve it before switching. Review/merge order is documented in [REVIEW.md](REVIEW.md). Do not merge to run these tests.
@@ -282,3 +282,17 @@ The first command checks the controls with synthetic fixtures and provider doubl
 The fixture file is `assistant/comparison_cases.json`. Review expected labels/quotes before extending it. Add cases when a real failure is reproduced with sanitized synthetic facts. Keep model/context settings and the fixture digest with evaluation results. Include new role requirements and evidence styles when building a broader evaluation set; do not tune only to these eight examples.
 
 Acceptance: bad name-only, future-work, production-qualifier and incomplete-skill proposals remain unaccepted; no model result can choose a resume or authorize downstream writes. Stale, partial and blanket review payloads fail. Corrected reviewer quotations are the only generation facts. An explicit flag override is visible in history; it is not a machine-certified fact.
+
+
+## Comparison inspection panel
+
+Outline: load an application → inspect each source/requirement → check surrounding context → complete the command template → reload to verify the recorded decision.
+
+1. Open Streamlit and expand **Inspect comparison evidence**. Enter the application ID returned by `/save_jd`, after running `/compare_resume`. Click **Load comparison**. Loading reads local workflow state; it does not call Google or the model.
+2. Choose an evidence source and requirement ID. Inspect the proposed verdict and quotation beside the recorded reviewer decision. Unreviewed model counts remain distinct from accepted reviewer counts. An absence of flags does not establish support.
+3. Expand **Full frozen source** to inspect context, including planned work or portfolio qualifiers. This is the comparison snapshot; it is not a live refresh of the source document.
+4. Copy the incomplete JSON template. Fill every requirement decision, quote, reviewer note and any required flag acknowledgements yourself. Submit it through `/review_comparison` in chat or the CLI. The panel never fills decisions or approves evidence. Review needed projects before drafting.
+5. Click **Load comparison** again. Check that the recorded correction appears alongside the original model proposal. The loaded view stays fixed until reloaded; the command enforces the comparison ID if a newer comparison has replaced it.
+6. Change the application ID: old evidence must disappear until that application's comparison is loaded. An unknown ID must display an error without retaining another application's evidence.
+
+The offline Streamlit tests exercise these behaviors and assert that inspection does not modify application records or invoke Google/model calls. They verify UI behavior, not factual accuracy or browser layout.

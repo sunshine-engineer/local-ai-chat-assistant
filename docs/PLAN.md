@@ -41,3 +41,6 @@ The command flow, Google sandbox writes, read-only project ingestion, compact fo
 
 
 Comparison control version 1 now separates model proposals from accepted reviewer decisions. It removes automatic resume selection, requires a snapshot-bound decision for each selected requirement, keeps override history, and limits generation to accepted quotations. Eight synthetic failure regressions exercise the gate. Model semantic accuracy remains an open evaluation task; these controls contain unreliable judgments rather than claim to fix model reasoning. Broader reviewed cases are required before considering any reduction in manual control.
+
+
+A read-only comparison inspection panel now exposes proposal/decision differences and full frozen source context. It is a convenience for the existing command workflow; approvals remain explicit commands. It does not change model quality requirements or enable automation.
