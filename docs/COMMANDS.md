@@ -5,7 +5,7 @@ This is a single-user local app. Use `streamlit run app.py` or the terminal CLI.
 ## Google setup
 
 1. Create a Google Cloud project and enable Drive, Docs and Sheets APIs.
-2. Configure OAuth consent for your personal account; add yourself as a test user if the app is in testing.
+2. In Google Auth Platform → Audience, choose **External** and publishing status **Testing** for a personal Gmail account. Add your Gmail address under **Test users**. Internal audience is restricted to the parent organization and causes `403 org_internal` for personal Gmail.
 3. Create a **Desktop app** OAuth client and download its JSON outside the repository.
 4. Install dependencies and run on your own desktop:
    `python -m assistant.cli /google_connect /absolute/private/client.json`
@@ -91,3 +91,14 @@ Cover letters are optional drafts with evidence references returned separately. 
 `/reset_edits {"application_id":"APPLICATION_ID","keep_current":true}` reads the current draft, preserves it remotely, clears local suggestions/pending edit state and invalidates approval. Inspect the current draft before using it. It does not undo remote edits. Then generate new suggestions or review and approve again. Recomparison is blocked once a draft exists, preserving the draft's evidence snapshot.
 
 See [TESTING.md](TESTING.md) for the full Windows/WSL walkthrough, retry checks, model quality checks and failure expectations.
+
+
+## Google login troubleshooting
+
+- **403 org_internal / organization-only app:** change Google Auth Platform → Audience to External, keep Testing, add your personal Google account as a test user, save, then restart/reopen consent. If organization policy prevents External, create the personal assistant in a project under your personal account instead. Changing audience in the same project does not require replacing its Desktop client JSON.
+- **403 access_denied / app still being tested:** confirm that the exact account you selected is listed under Test users.
+- **No popup:** the terminal prints a Google consent URL. Open it in your normal browser; browser launching may be unavailable in WSL/headless environments.
+- **Localhost cannot be reached after consent:** the callback must reach the same machine running the CLI. Use the CLI on your desktop rather than inside a container. Do not paste callback codes/tokens into chat.
+- **Google API disabled:** enable Drive API, Docs API and Sheets API in the same Cloud project as the OAuth client.
+
+Reference: [Google Auth Platform audience and testing rules](https://support.google.com/cloud/answer/15549945?hl=en). Test-user authorizations and their offline refresh tokens expire after seven days while the app remains in Testing.

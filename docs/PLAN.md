@@ -24,11 +24,11 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-ollama pull phi3:mini
+ollama pull qwen3:1.7b
 python -m assistant.cli /status
 streamlit run app.py
 ```
 
-SQLite is the local default. Docker Compose supplies PostgreSQL and Ollama; PostgreSQL overrides the local DATABASE_URL setting; run `docker compose up --build -d` and `docker compose exec ollama ollama pull phi3:mini`. CPU operation is supported; performance is hardware-dependent. Model installation and a real prompt are required to validate inference.
+SQLite is the local default. Docker Compose supplies PostgreSQL and Ollama; PostgreSQL overrides the local DATABASE_URL setting; run `docker compose up --build -d` and `docker compose exec ollama ollama pull qwen3:1.7b`. CPU operation is supported; performance is hardware-dependent. Model installation and a real prompt are required to validate inference.
 
 Offline checks: `python -m unittest discover -s tests -v`.

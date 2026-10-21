@@ -87,6 +87,16 @@ class Google:
                 self._session = authorized_session(self.root)
             response = self._session.request(method, url, timeout=60, **kwargs)
             if not response.ok:
+                # Surface only allowlisted diagnostics, never Google's raw response body.
+                try:
+                    details = response.json().get('error', {}).get('details', [])
+                    disabled = {item.get('metadata', {}).get('service') for item in details
+                                if item.get('reason') == 'SERVICE_DISABLED'}
+                except (ValueError, TypeError, AttributeError):
+                    disabled = set()
+                for service in ('drive.googleapis.com', 'docs.googleapis.com', 'sheets.googleapis.com'):
+                    if service in disabled:
+                        raise GoogleError(f'Google API disabled: {service}. Enable it in the OAuth client project, then retry the same command.')
                 raise GoogleError(f'Google request failed (HTTP {response.status_code}); check permissions and configuration. Writes may require reconciliation before retry.')
             return response.json() if response.content else {}
         except GoogleError:

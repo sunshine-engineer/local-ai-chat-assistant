@@ -19,21 +19,22 @@ This is a development implementation, not a verified production deployment. Voic
 
 ## Start locally
 
-Python 3.12+ and an installed Ollama model are required for model-driven features.
+Python 3.12+ and Docker are used below; Ollama runs in a container.
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-ollama pull phi3:mini
+docker compose up -d ollama
+docker compose exec ollama ollama pull qwen3:1.7b
 python -m assistant.cli /status
 streamlit run app.py
 ```
 
-On Windows use `.venv\Scripts\activate` for activation. Local chat history defaults to SQLite. No paid model API or LangSmith key is required. The default model is inherited from the original project and has not been benchmarked for this workflow; change `OLLAMA_MODEL` after evaluating your hardware and output quality.
+On Windows use `.venv\Scripts\activate` for activation. Local chat history defaults to SQLite. No paid model API or LangSmith key is required. The default model is qwen3:1.7b, exercised locally against synthetic data and a copied resume. This is a limited smoke test, not a quality benchmark; review generated claims and evaluate your own hardware.
 
-Docker alternative: `docker compose up --build -d`, then `docker compose exec ollama ollama pull phi3:mini`. Compose uses PostgreSQL and CPU-capable Ollama by default. It binds services to localhost and mounts private workflow state. Authenticate using the local CLI before starting the container; browser OAuth inside Docker is not supported.
+Docker alternative: `docker compose up --build -d`, then `docker compose exec ollama ollama pull qwen3:1.7b`. Compose uses PostgreSQL and CPU-capable Ollama by default. It binds services to localhost and mounts private workflow state. Authenticate using the local CLI before starting the container; browser OAuth inside Docker is not supported.
 
 ## Configure and use commands
 

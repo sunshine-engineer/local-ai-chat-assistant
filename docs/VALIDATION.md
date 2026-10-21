@@ -1,30 +1,36 @@
 # Validation status
 
+Development snapshot: 2026-10-21. Results below separate real services from test doubles.
+
 ## Confirmed
 
-- Repository cloned locally; module branches and review PRs created without merging.
-- 25 offline unit/integration tests pass, including manual workflow execution using explicit in-memory Google and model doubles.
-- Automated Streamlit AppTest covers initial rendering, /help, unknown commands and history across reruns. CLI subprocess tests cover JSON stdin, success/failure exit codes and private state isolation.
-- Conflict recovery preserves the remote draft, discards only local edit state and requires renewed review. Comparisons cannot replace the evidence snapshot behind an existing draft. SQLite connections close on success/failure; transaction rollback and lock reuse are tested.
-- Three user-supplied Google files were copied into a temporary Drive sandbox using the connected Google Drive plugin, then listed/read back. Original files received no write requests.
-- A general resume was copied into a new sandbox-only validation tab using the application's request builder and Google Docs batchUpdate via the connector. Content readback matches; the preceding 36 sandbox tabs' body, page and named styles are unchanged.
-- Live request validation caught and corrected a page-size field mismatch and a read-only header/footer style flag. Page and named style requests now succeed on the inspected template.
+| Layer | Evidence | Limit |
+|---|---|---|
+| Offline regression | 31 tests pass on host Python 3.14 and container Python 3.12: commands, CLI, UI chat/commands, recovery, source snapshots, citations, Unicode edits and tracker boundaries | Google/model doubles in workflow tests |
+| Real local services | Three opt-in tests pass: Streamlit chat with Docker Qwen, synthetic supported/gap comparison, PostgreSQL message persistence | One small synthetic comparison is not a quality benchmark |
+| App-owned Google login | Desktop browser consent, Drive/Docs/Sheets access and forced token refresh/persistence pass | Credentials remain private; testing-mode OAuth can need renewed consent |
+| Google sandbox | Three supplied files copied/read back; copied resume has a validation tab with matching content/styles; preceding 36 tabs unchanged | Connector-assisted checks are distinct from app OAuth execution |
+| App-owned tracker writes | Preview, RAW row write, exact readback and duplicate retry pass in the copied workbook; original tracker sample matches its pre-test snapshot | One synthetic application; existing custom tracker tabs are outside write scope |
+| Real resume model calls | Comparison, suggestions and optional letter generated from a 5,718-character copied-resume snapshot | Snapshot checks alone do not prove Google writes; suggestions returned zero edits |
+| Runtime | Docker Ollama and PostgreSQL plus a Streamlit test container run; Python 3.12 container regression exercised | Test runtime reused an existing dependency image |
 
-## Not yet verified
+Live testing found and fixed a missing chat import, empty JSON output, paraphrased evidence/requirements, and a cover-letter timeout. Action schemas now constrain literal quotations; response completion and schema validation run before domain checks. Human review still determines whether a claim follows from its evidence. A synthetic letter initially embellished scale despite a valid quote; stronger prompting reduces this risk but does not guarantee factual support.
 
-- End-to-end app-owned OAuth, token refresh and Google API execution: the app needs a user-created Desktop OAuth client and consent on the user's machine. Connector authorization is separate and was not copied into the app.
-- Real Ollama inference, comparison quality and generation latency: Ollama is not installed in this execution environment. Tests use model doubles. The inherited phi3:mini model remains a configurable starting point, not a validated recommendation.
-- Actual tracker row writes and cover-letter creation through app OAuth.
-- Docker services and PostgreSQL runtime: Docker CLI is present but daemon access is unavailable to this execution user. Compose configuration passes `docker compose --env-file .env.example config --quiet`.
-- Rendered resume/PDF pagination. Content and style readback do not prove page fit.
+CPU measurements on one test run: copied-resume comparison approximately 73 seconds, suggestions 122 seconds, and a successful letter retry 140 seconds. Some calls overlapped; these are observations, not benchmarks. Timeout defaults to 300 seconds and remains configurable. Qwen3:1.7b is a smoke-test baseline, not a model-quality recommendation.
+
+## Acceptance result and remaining limits
+
+- Full app-owned Google command sequence passes: JD save/retry, source refresh, comparison, resume draft/retry, suggestions, controlled reviewed edit/retry, local reset, approval, cover-letter save/reconciliation, tracker initialization/retry, row preview/write/retry, and final Prepared summary. The controlled edit is an explicit sandbox marker, not a model-generated recommendation. The first cover-letter save hit a network timeout; retry reconciled successfully. Existing resume tabs were checked for preservation during writes; all 38 tabs present before the final letter/tracker phase remained unchanged afterward.
+- Clean build of the repository Dockerfile: dependency download timed out fetching PyArrow. Cache/retry settings were added, but the updated clean build has not passed. A reused dependency image was used for runtime checks.
+- PDF layout was inspected after a selected-tab export succeeded (the whole-document export timed out). The PDF contains the test marker, confirming the correct draft was exported. All three pages render, but the final education entry spills onto a mostly empty third page. This sandbox sample needs shortening/page-fit review before real use; automatic page fitting is not implemented.
 
 ## Practical limits
 
 - Single user, one local state directory; no public deployment or simultaneous independent app instances.
 - Sandbox writes only. Existing tracker sheets are preserved; new rows go into a dedicated Assistant Applications tab in the copied workbook.
-- No source truth/semantic entailment guarantee: the app validates source quote existence, and requires human review before edits and tracking.
+- No source truth/semantic entailment guarantee: the app validates source quote existence and requires human review before edits and tracking.
 - No voice, automation, MCP client or autonomous multi-agent runtime in this phase.
 
 ## Reproduce and review
 
-Follow [TESTING.md](TESTING.md), record sanitized outcomes with [TEST_REPORT_TEMPLATE.md](TEST_REPORT_TEMPLATE.md), and use [REVIEW.md](REVIEW.md) for the unmerged PR stack.
+Follow [TESTING.md](TESTING.md), including its opt-in real-service suite. Record sanitized outcomes with [TEST_REPORT_TEMPLATE.md](TEST_REPORT_TEMPLATE.md), and use [REVIEW.md](REVIEW.md) for the unmerged PR stack. Private tokens, source snapshots and live report files are excluded from Git.
