@@ -10,6 +10,7 @@ def document(text='\n'):
 class MemoryGoogle(Google):
     def __init__(self):
         super().__init__('.')
+        self.sandbox_folder_id = 'folder'
         self.text, self.created, self.writes = '\n', False, 0
     def metadata(self, file_id):
         return {'mimeType': FOLDER}
