@@ -32,6 +32,20 @@ def clone_requests(source, target_id):
     if not text.endswith('\n') or not text.strip():
         raise ValueError('Resume must contain non-empty paragraphs.')
     requests = [{'insertText': {'location': {'index': 1, 'tabId': target_id}, 'text': text[:-1]}}]
+    # Each tab has its own page and named styles; never update another tab's style.
+    document_style = {k: v for k, v in document_tab.get('documentStyle', {}).items()
+                      if k in {'background', 'pageNumberStart', 'marginTop', 'marginBottom',
+                               'marginRight', 'marginLeft', 'pageSize', 'marginHeader',
+                               'marginFooter'}}
+    if document_style:
+        requests.append({'updateDocumentStyle': {'tabId': target_id, 'documentStyle': document_style,
+                                                 'fields': ','.join(document_style)}})
+    for named in document_tab.get('namedStyles', {}).get('styles', []):
+        style = {k: v for k, v in named.items() if k in {'namedStyleType', 'textStyle', 'paragraphStyle'}}
+        if style.get('paragraphStyle'):
+            style['paragraphStyle'] = {k: v for k, v in style['paragraphStyle'].items() if k != 'headingId'}
+        if style.get('namedStyleType'):
+            requests.append({'updateNamedStyle': {'tabId': target_id, 'namedStyle': style, 'fields': ','.join(style)}})
     position = 1
     for item in document_tab['body'].get('content', []):
         if 'sectionBreak' in item and item.get('startIndex', 0) == 0:

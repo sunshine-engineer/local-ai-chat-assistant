@@ -1,219 +1,75 @@
-# 🤖 Local AI Portfolio Chatbot
+# Local AI Job Application Assistant
 
-> Production-ready Local LLM Chat Assistant powered by Ollama, LangChain, PostgreSQL, Docker and Streamlit.
+A single-user, command-first assistant built with Python, Streamlit, Ollama and Google Workspace APIs. It prepares job-application material; you review and submit applications yourself.
 
-## Table of Contents
+## Current capabilities
 
-- Overview
-- Features
-- Demo
-- Screenshots
-- Architecture
-- Tech Stack
-- Installation
-- Docker
-- Environment Variables
-- Database
-- Roadmap
-- Future Improvements
-- License
+| Module | Commands | Boundary |
+|---|---|---|
+| Local chat and routing | `/help`, `/status` | Self-hosted Ollama; tracing optional |
+| Google configuration | `/google_connect`, `/configure`, `/sources` | App-owned OAuth; sandbox writes only |
+| JD capture | `/save_jd` | Original text preserved in a new Google Doc |
+| Source catalogue | `/refresh_sources`, `/show_sources` | Selected resume tabs, Docs, local Markdown/text |
+| Resume comparison | `/compare_resume` | Source quotes validated; judgments require review |
+| Resume tailoring | `/draft_resume`, `/suggest_edits`, `/apply_edits`, `/approve_resume` | New tab; explicit reviewed edits only |
+| Tracking | `/init_tracker`, `/track_application` | Dedicated tab in copied workbook; Prepared status |
+| Application package | `/draft_cover_letter`, `/application_summary` | Optional letter; no automatic submission |
 
-## Overview
-A production-oriented **local Generative AI chatbot** built with **Streamlit**, **LangChain**, **Ollama**, and **PostgreSQL**.
+This is a development implementation, not a verified production deployment. Voice, automation, autonomous multi-agent workflows, and general-purpose Google editing are deferred. Google REST access is behind a separate adapter; an MCP client is not implemented yet.
 
-## Features
+## Start locally
 
-| Feature        | Description              | Status |
-| -------------- | ------------------------ | ------ |
-| Chat History   | PostgreSQL persistence   | ✅     |
-| Multiple Chats | Session management       | ✅     |
-| Rename Chats   | Rename conversations     | ✅     |
-| Docker         | Containerized deployment | ✅     |
-| Streaming      | Token streaming          | 🚧     |
+Python 3.12+ and an installed Ollama model are required for model-driven features.
 
-
-## 🎥 Demo
-
-![Demo](docs/demo.gif)
-
-> Replace this GIF with a 60–90 second walkthrough.
-
-
-## Screenshots
-
-### Home Screen
-
-![Home](assets/home_screeen.png)
-
----
-
-### Chat Window
-
-![Chat](assets/Chat_Window.png)
-
----
-
-### Sidebar
-
-![Sidebar](assets/Sidebar.png)
-
----
-
-### Docker Containers
-
-![Docker](assets/docker_containers.png)
-
----
-
-### PostgreSQL
-
-![Database](docs/images/database.png)
-
----
-
-### LangSmith Trace
-
-![Trace](docs/images/langsmith.png)
-
-
-## Architecture Diagram
-```mermaid
-flowchart LR
-
-A[User]
-
-B[Streamlit UI]
-
-C[LangChain]
-
-D[Ollama]
-
-E[Phi-3]
-
-F[(PostgreSQL)]
-
-G[LangSmith]
-
-A --> B
-B --> C
-C --> D
-D --> E
-B --> F
-B --> G
-```
-           
-
-## Tech Stack
-| Category      | Technology |
-| ------------- | ---------- |
-| Frontend      | Streamlit  |
-| LLM           | Ollama     |
-| Model         | Phi-3      |
-| Framework     | LangChain  |
-| ORM           | SQLAlchemy |
-| Database      | PostgreSQL |
-| Container     | Docker     |
-| Observability | LangSmith  |
-
-
-## Project Structure
-
-
-    Local-AI-Portfolio-Chatbot/
-                          ├── app.py
-                          ├── helpers.py
-                          ├── postgres/
-                          │   ├── db.py
-                          │   ├── models.py
-                          │   └── initialize.py
-                          ├── Dockerfile
-                          ├── docker-compose.yml
-                          ├── requirements.txt
-                          ├── docs/
-                          │   ├── images/
-                          │   └── demo.gif
-                          └── README.md
-
-## Environment Variables
-| Variable          | Description     |
-| ----------------- | --------------- |
-| OLLAMA_HOST       | Ollama endpoint |
-| LANGCHAIN_API_KEY | LangSmith       |
-| LANGCHAIN_PROJECT | Project Name    |
-| DATABASE_URL      | PostgreSQL      |
-
-## Database Schema
-```mermaid
-erDiagram
-
-ChatSession ||--o{ Message : contains
-
-ChatSession {
-uuid id
-string title
-datetime created_at
-}
-
-Message {
-uuid id
-string role
-text message
-datetime created_at
-}
-```
-
-## Quick Start
 ```bash
-1. Clone
-
-2. Create virtual environment
-
-3. Install dependencies
-
-4. Configure .env
-
-5. Start Docker
-
-6. Pull Phi-3
-
-7. Launch Streamlit
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+ollama pull phi3:mini
+python -m assistant.cli /status
+streamlit run app.py
 ```
 
-## Performance Metrics
-| Metric                | Value  |
-| --------------------- | ------ |
-| Average Response Time | ~X sec |
-| Startup Time          | ~X sec |
-| Concurrent Sessions   | ~X      |
-| Model Load Time       | ~X      |
-| Database Latency      | ~X      |
+On Windows use `.venv\Scripts\activate` for activation. Local chat history defaults to SQLite. No paid model API or LangSmith key is required. The default model is inherited from the original project and has not been benchmarked for this workflow; change `OLLAMA_MODEL` after evaluating your hardware and output quality.
 
+Docker alternative: `docker compose up --build -d`, then `docker compose exec ollama ollama pull phi3:mini`. Compose uses PostgreSQL and CPU-capable Ollama by default. It binds services to localhost and mounts private workflow state. Authenticate using the local CLI before starting the container; browser OAuth inside Docker is not supported.
 
+## Configure and use commands
 
-## Roadmap
+See [command guide](docs/COMMANDS.md) for OAuth setup, configuration and exact payloads. Use only copies inside a dedicated sandbox folder. Keep credentials outside the repository. The connected Codex account does not authenticate this app.
 
-- [x] PostgreSQL Chat History
-- [x] Multiple Chats
-- [x] Rename Chat
-- [x] Docker Support
-- [x] LangSmith Integration
-- [ ] Streaming Responses
-- [ ] Multi-model Support
-- [ ] Document Upload
-- [ ] RAG
-- [ ] Vector Database
-- [ ] Export Chat
-- [ ] Authentication
-- [ ] REST API
-- [ ] Kubernetes
-- [ ] CI/CD
+Typical sequence:
 
-## License
-MIT
+```text
+/save_jd {"company":"Example","role":"Engineer","jd":"Original JD text"}
+/refresh_sources
+/compare_resume APPLICATION_ID
+/draft_resume APPLICATION_ID
+/suggest_edits APPLICATION_ID
+/apply_edits {"application_id":"APPLICATION_ID","edit_ids":[0],"reviewed":true}
+/approve_resume APPLICATION_ID
+/draft_cover_letter APPLICATION_ID
+/init_tracker
+/track_application APPLICATION_ID
+/track_application APPLICATION_ID --write
+/application_summary APPLICATION_ID
+```
 
-## Acknowledgement
-- LangChain
-- Ollama
-- Streamlit
-- PostgreSQL
-- SQLAlchemy
+Cover letters are optional. `/track_application` previews; adding `--write` saves. Use the application ID returned by `/save_jd`. CLI commands also accept JSON on stdin: `python -m assistant.cli /save_jd < jd.json`.
+
+## Architecture and extension
+
+Streamlit/CLI → command registry → application handlers → Google/model adapters.
+
+Workflow state is private local SQLite under `.assistant/`; chat history uses the configured SQLAlchemy database. Add a command by registering an `Action` and implementing a bounded handler. Model output cannot invoke tools directly. External text is treated as source material. Quotation checks reduce fabricated citations but cannot establish semantic truth; human review remains necessary.
+
+The initial copier supports paragraph/text resumes with page and named styles. Complex native structures are rejected before writing. PDF/page-fit review is manual. Do not expose this single-user app publicly without adding authentication and per-user credential/state isolation.
+
+## Validation
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+Tests include a complete manual workflow with Google/model doubles, interrupted-write reconciliation, citation checks, preserved source tabs, Unicode edit ranges and tracker duplicate/formula protections. See [validation status](docs/VALIDATION.md) for the distinction between offline coverage and live checks, and [module plan](docs/PLAN.md) for scope.

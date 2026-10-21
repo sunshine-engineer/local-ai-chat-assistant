@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+.assistant
+.venv
+venv
+__pycache__
+*.pyc
+*.db
+credentials*.json
+token*.json
+logs

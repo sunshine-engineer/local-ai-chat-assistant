@@ -19,8 +19,12 @@ class Jobs:
         self.google.sandbox_folder_id = self.store.get('config', {}).get('sandbox_folder_id')
 
     def register(self, registry):
-        from assistant import evidence, resumes
+        from assistant import evidence, resumes, tracking, package
         commands = [
+            ('init_tracker', 'Create a dedicated tab in the sandbox tracker copy.', lambda a: tracking.initialize(self, a)),
+            ('track_application', 'Preview a tracker row; add --write to save it.', lambda a: tracking.track(self, a)),
+            ('draft_cover_letter', 'Generate and save an optional cited cover-letter draft.', lambda a: package.cover_letter(self, a)),
+            ('application_summary', 'Show application links, completion and remaining checks.', lambda a: package.summary(self, a)),
             ('draft_resume', 'Copy the recommended resume into a new sandbox tab.', lambda a: resumes.draft(self, a)),
             ('suggest_edits', 'Suggest cited resume changes without writing to Google.', lambda a: resumes.suggest(self, a)),
             ('apply_edits', 'Apply selected reviewed edit IDs from a JSON payload.', lambda a: resumes.apply(self, a)),
@@ -48,7 +52,7 @@ class Jobs:
     def configure(self, arguments):
         data = json_input(arguments)
         allowed = {'source_folder_ids', 'local_source_dirs', 'jd_folder_id', 'resume_doc_id',
-                   'cover_letter_folder_id', 'tracker_id', 'tracker_tab', 'tracker_columns',
+                   'cover_letter_folder_id', 'tracker_id', 'tracker_tab',
                    'sandbox_folder_id', 'resume_tab_ids'}
         if set(data) - allowed:
             raise ValueError('Unknown configuration key(s). See docs/COMMANDS.md.')

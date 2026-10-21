@@ -31,3 +31,16 @@ class ResumeTest(unittest.TestCase):
         self.assertEqual(text, 'Python\n')
         self.assertEqual(requests[0]['insertText']['text'], 'Python')
         self.assertEqual(requests[1]['updateTextStyle']['textStyle'], {'bold': True})
+
+    def test_clone_styles_target_only_new_tab_and_skip_read_only_flags(self):
+        tab = {'documentTab': {'documentStyle': {'pageSize': {'width': {'magnitude': 612, 'unit': 'PT'}},
+            'useCustomHeaderFooterMargins': True}, 'namedStyles': {'styles': [{'namedStyleType': 'NORMAL_TEXT',
+            'textStyle': {'fontSize': {'magnitude': 11, 'unit': 'PT'}}}]},
+            'body': {'content': [{'paragraph': {'elements': [{'textRun': {'content': 'Text\n'}}]}}]}}}
+        _, requests = clone_requests(tab, 'new-tab')
+        doc_style = next(r['updateDocumentStyle'] for r in requests if 'updateDocumentStyle' in r)
+        self.assertIn('pageSize', doc_style['documentStyle'])
+        self.assertNotIn('useCustomHeaderFooterMargins', doc_style['documentStyle'])
+        self.assertEqual(doc_style['tabId'], 'new-tab')
+        named_style = next(r['updateNamedStyle'] for r in requests if 'updateNamedStyle' in r)
+        self.assertEqual(named_style['tabId'], 'new-tab')
