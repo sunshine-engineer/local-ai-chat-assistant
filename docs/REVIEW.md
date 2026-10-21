@@ -10,6 +10,7 @@ The implementation is split into stacked PRs. Nothing is merged automatically.
 | 4 | [#4](https://github.com/sunshine-engineer/local-ai-chat-assistant/pull/4) | Owned resume draft tabs and reviewed edit execution |
 | 5 | [#5](https://github.com/sunshine-engineer/local-ai-chat-assistant/pull/5) | Tracking, optional letter and package summary; live-tested style corrections |
 | 6 | [#6](https://github.com/sunshine-engineer/local-ai-chat-assistant/pull/6) | CLI failures, conflict recovery, source snapshot stability and reviewer instructions |
+| 7 | [#7](https://github.com/sunshine-engineer/local-ai-chat-assistant/pull/7) | Real model output contracts, restored chat, Google acceptance evidence and Docker/OAuth test instructions |
 
 PR #5 includes page/named style corrections found during live sandbox validation; assess the latest stack for the final behavior. Each PR diff is against its predecessor. Test the top branch before merging if you want to exercise the full app.
 
