@@ -18,7 +18,7 @@ The initial adapter uses Google REST APIs, with OAuth scopes for reading Drive a
 Resource IDs are the ID portions of Google URLs. Source folders are read only. Only explicitly configured output documents/folders and the tracker receive writes.
 
 ```text
-/configure {"sandbox_folder_id":"SANDBOX_FOLDER_ID","source_folder_ids":["SOURCE_FOLDER_ID"],"local_source_dirs":["/absolute/project/docs"],"jd_folder_id":"SANDBOX_FOLDER_ID","resume_doc_id":"RESUME_DOC_ID","cover_letter_folder_id":"SANDBOX_FOLDER_ID","tracker_id":"SPREADSHEET_ID","tracker_tab":"Applications"}
+/configure {"sandbox_folder_id":"SANDBOX_FOLDER_ID","source_folder_ids":["SOURCE_FOLDER_ID"],"local_source_dirs":["/absolute/project/docs"],"jd_folder_id":"SANDBOX_FOLDER_ID","resume_doc_id":"RESUME_DOC_ID","cover_letter_folder_id":"SANDBOX_FOLDER_ID","tracker_id":"SPREADSHEET_ID","tracker_tab":"Assistant Applications"}
 /sources
 ```
 
