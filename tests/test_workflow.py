@@ -7,7 +7,7 @@ from urllib.parse import unquote
 from assistant.jobs import Jobs
 from assistant.state import Store
 from assistant.google import DOC, FOLDER, body_text, tabs
-from assistant import evidence, resumes, tracking, package
+from assistant import evidence, resumes, tracking, package, requirements
 
 
 def make_tab(tab_id, text, title='General Resume'):
@@ -85,9 +85,8 @@ class Cloud:
 
 
 def comparison_model(instruction, data, **kwargs):
-    if 'jd' in data:
-        return {'requirements': ['Python']}
-    return {'matches': [{'requirement': 'Python', 'status': 'supported', 'quote': 'Built Python ETL'}]}
+    return {'matches': [{'requirement': requirement, 'status': 'supported', 'quote': 'Built Python ETL'}
+                        for requirement in data['requirements']]}
 
 
 class WorkflowTest(unittest.TestCase):
@@ -104,6 +103,8 @@ class WorkflowTest(unittest.TestCase):
         data = {'jd': 'Python required', 'company': 'Example', 'role': 'Engineer', 'url': 'https://example.com/job'}
         self.app_id = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
         evidence.refresh(self.jobs)
+        requirements.review(self.jobs, json.dumps({'application_id': self.app_id,
+            'candidate_ids': [0], 'reviewed': True}))
         evidence.compare(self.jobs, self.app_id, comparison_model)
 
     def test_full_manual_flow_and_retries(self):

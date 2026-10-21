@@ -11,6 +11,7 @@ from unittest.mock import patch
 from assistant.evidence import compare, digest
 from assistant.jobs import Jobs
 from assistant.state import Store
+from assistant.requirements import review
 
 
 class LiveServicesTest(unittest.TestCase):
@@ -27,6 +28,7 @@ class LiveServicesTest(unittest.TestCase):
             jobs = Jobs(Store(directory))
             jobs.store.put('app:live-test', {'input': {'jd': jd}})
             jobs.store.put('catalogue', {'sources': [source], 'skipped': [], 'digest': digest([source])})
+            review(jobs, json.dumps({'application_id': 'live-test', 'candidate_ids': [0, 1, 2], 'reviewed': True}))
             result = json.loads(compare(jobs, 'live-test'))
             matches = result['resumes'][0]['matches']
             self.assertTrue(any('RAG' in r for r in result['requirements']), 'Desirable requirement omitted')

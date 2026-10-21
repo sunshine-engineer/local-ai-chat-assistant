@@ -10,7 +10,7 @@ A single-user, command-first assistant built with Python, Streamlit, Ollama and 
 | Google configuration | `/google_connect`, `/configure`, `/sources` | App-owned OAuth; sandbox writes only |
 | JD capture | `/save_jd` | Original text preserved in a new Google Doc |
 | Source catalogue | `/refresh_sources`, `/show_sources` | Selected resume tabs, Docs, local Markdown/text |
-| Resume comparison | `/compare_resume` | Source quotes validated; judgments require review |
+| JD scope and comparison | `/requirements`, `/review_requirements`, `/compare_resume` | Review selected JD sentences before model comparison; judgments require review |
 | Resume tailoring | `/draft_resume`, `/format_resume`, `/suggest_edits`, `/apply_edits`, `/reset_edits`, `/approve_resume` | New tab; explicit reviewed edits only |
 | Tracking | `/init_tracker`, `/track_application` | Dedicated tab in copied workbook; Prepared status |
 | Application package | `/draft_cover_letter`, `/application_summary` | Optional letter; no automatic submission |
@@ -45,6 +45,8 @@ Typical sequence:
 ```text
 /save_jd {"company":"Example","role":"Engineer","jd":"Original JD text"}
 /refresh_sources
+/requirements APPLICATION_ID
+/review_requirements {"application_id":"APPLICATION_ID","candidate_ids":[1,2,3],"reviewed":true}
 /compare_resume APPLICATION_ID
 /draft_resume APPLICATION_ID
 /suggest_edits APPLICATION_ID
@@ -58,6 +60,8 @@ Typical sequence:
 ```
 
 If the copied resume needs tighter spacing, preview `/format_resume APPLICATION_ID`, then use `--write` to apply the compact preset. Text stays unchanged; approval is invalidated. Export and inspect the PDF before approving again. Formatting does not guarantee a page count.
+
+The candidate IDs above apply only to the synthetic sample JD. For your own JD, inspect `/requirements` and select every relevant duty, qualification and required/desirable skill. The small model is not trusted to choose comparison scope.
 
 Cover letters are optional. `/track_application` previews; adding `--write` saves. Use the application ID returned by `/save_jd`. CLI commands also accept JSON on stdin: `python -m assistant.cli /save_jd < jd.json`.
 

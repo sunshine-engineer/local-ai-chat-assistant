@@ -14,7 +14,7 @@ The PRs are stacked. Test the latest stack branch to exercise all modules withou
 
 ```bash
 git fetch origin
-git switch feat/resume-formatting
+git switch fix/reviewed-requirements
 ```
 
 If you already have uncommitted work, preserve it before switching. Review/merge order is documented in [REVIEW.md](REVIEW.md). Do not merge to run these tests.
@@ -149,7 +149,9 @@ python -m assistant.cli /save_jd < examples/jd.sample.json
 | 3 | `/save_jd` with sample JSON | Application ID and new JD link; original text preserved; missing fields are unknown | New Doc in sandbox |
 | 4 | `/refresh_sources` | Selected resume and evidence sources listed; skipped files reported | None |
 | 5 | `/show_sources` | Catalogue IDs and source links are inspectable | None |
-| 6 | `/compare_resume APPLICATION_ID` | Every extracted requirement quotes the JD; matches cite source text; gaps and counts are explained | None |
+| 5a | `/requirements APPLICATION_ID` | Every JD sentence/line candidate is listed; no model silently drops content | None |
+| 5b | `/review_requirements` with reviewed candidate IDs | Only selected scope is saved; for the synthetic sample select IDs 1, 2, 3 | None |
+| 6 | `/compare_resume APPLICATION_ID` | Every selected requirement has one match; citations, gaps and scope-limited counts appear | None |
 | 7 | `/draft_resume APPLICATION_ID` | Exactly one new draft tab; previous tabs and source resume remain intact | New tab in copied Doc |
 | 8 | `/suggest_edits APPLICATION_ID` | Proposed before/after text and source citations; no remote resume edit | None |
 | 9 | `/apply_edits` with reviewed JSON | Only selected edits appear in the owned draft tab | Draft tab only |
@@ -160,6 +162,8 @@ python -m assistant.cli /save_jd < examples/jd.sample.json
 | 14 | `/track_application APPLICATION_ID` | Proposed row appears; sheet has no new row yet | None |
 | 15 | `/track_application APPLICATION_ID --write` | One verified row with artifact links and Prepared status | Dedicated tracker tab |
 | 16 | `/application_summary APPLICATION_ID` | Links and missing steps appear; complete package says prepared for you to apply | None |
+
+For step 5b, the sample payload is `/review_requirements {"application_id":"APPLICATION_ID","candidate_ids":[1,2,3],"reviewed":true}`. Choose IDs from your actual JD before comparing; the small model does not select scope.
 
 For step 9, use only edit IDs you actually reviewed. Example payload:
 
@@ -200,6 +204,8 @@ Use sandbox copies only. Never deliberately test failures on original documents.
 | Tracker preview | No remote row change |
 | Resume changes after approval | Tracking stops until another review/approval |
 | Resume source changes before drafting | Drafting stops; refresh/recompare before creating the draft |
+| Compare before requirement review | Stops before model inference |
+| Changed JD after scope review | Stops until scope is reviewed again |
 | Recompare after a draft exists | Stops to preserve the draft's evidence snapshot |
 | Output target outside sandbox | Write stops; original files remain unchanged |
 | Occupied/formula-containing reserved tracker row | Stops; existing values remain intact |

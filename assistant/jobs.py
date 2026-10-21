@@ -19,7 +19,7 @@ class Jobs:
         self.google.sandbox_folder_id = self.store.get('config', {}).get('sandbox_folder_id')
 
     def register(self, registry):
-        from assistant import evidence, resumes, tracking, package, layout
+        from assistant import evidence, resumes, tracking, package, layout, requirements
         commands = [
             ('init_tracker', 'Create a dedicated tab in the sandbox tracker copy.', lambda a: tracking.initialize(self, a)),
             ('track_application', 'Preview a tracker row; add --write to save it.', lambda a: tracking.track(self, a)),
@@ -34,6 +34,8 @@ class Jobs:
             ('refresh_sources', 'Read configured reference files and resume tabs.', lambda a: evidence.refresh(self, a)),
             ('show_sources', 'List source catalogue and skipped files.', lambda a: evidence.show(self, a)),
             ('compare_resume', 'Compare an application ID against resume and project evidence.', lambda a: evidence.compare(self, a)),
+            ('requirements', 'List every JD sentence/line candidate for scope review.', lambda a: requirements.show(self, a)),
+            ('review_requirements', 'Save selected JD candidate IDs using reviewed:true.', lambda a: requirements.review(self, a)),
             ('google_connect', 'CLI only: connect using an OAuth Desktop client JSON path.', self.connect),
             ('configure', 'Save configured Google resource IDs and local source folders as JSON.', self.configure),
             ('sources', 'Show current resource configuration.', self.sources),
