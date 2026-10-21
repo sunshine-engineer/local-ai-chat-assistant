@@ -7,8 +7,8 @@ Goal: turn a pasted JD into an evidence-based application package through explic
 | 0–1 | Local setup, /help, /status, action registry | Self-hosted Ollama; no external tracing required |
 | 2–3 | Google authentication, source settings, /save_jd | Configured folders only; preserve original JD |
 | 4–5 | Source catalogue, /compare_resume | Read-only evidence; no invented achievements or ATS predictions |
-| 6 | /draft_resume, /suggest_edits, /apply_edits | New tab only; originals preserved |
-| 7 | /track_application | Existing columns; preserve formulas; status Prepared |
+| 6 | /draft_resume, /format_resume, /suggest_edits, /apply_edits | New tab only; originals preserved |
+| 7 | /track_application | Dedicated copied-workbook tab; preserve existing tabs/formulas; status Prepared |
 | 8–9 | Cover letter and application summary | Optional letter; no job submission |
 
 Each module is reviewed in a separate stacked PR. Later branches target the preceding branch until merged. No merges are automatic. Commands share application IDs and persisted outcomes. Retries must not silently duplicate artifacts.
@@ -24,7 +24,8 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-ollama pull qwen3:1.7b
+docker compose up -d ollama
+docker compose exec ollama ollama pull qwen3:1.7b
 python -m assistant.cli /status
 streamlit run app.py
 ```

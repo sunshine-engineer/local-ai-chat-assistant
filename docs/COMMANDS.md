@@ -102,3 +102,18 @@ See [TESTING.md](TESTING.md) for the full Windows/WSL walkthrough, retry checks,
 - **Google API disabled:** enable Drive API, Docs API and Sheets API in the same Cloud project as the OAuth client.
 
 Reference: [Google Auth Platform audience and testing rules](https://support.google.com/cloud/answer/15549945?hl=en). Test-user authorizations and their offline refresh tokens expire after seven days while the app remains in Testing.
+
+
+## Compact resume formatting
+
+```text
+/format_resume APPLICATION_ID
+/format_resume APPLICATION_ID --write
+/approve_resume APPLICATION_ID
+```
+
+The first command previews the preset without a Google request. The write command changes only the owned draft tab: 10.5-point text, 36-point margins, 105% line spacing, zero paragraph space above and 2 points below. It preserves text, bold, links and alignment; all text uses one font size. No model call or content shortening is involved.
+
+A completed draft without pending edits is required. Writes use the current Google revision and verify requested styles, unchanged text and unchanged other tabs. Approval is invalidated before the remote write, including when the request times out. Retry the same command if its result is uncertain, then export and inspect the PDF before approving again. Different templates can still exceed two pages. The command has no automatic undo; restore formatting manually in the copied tab or create a separate application variant.
+
+Reference: [Google Docs formatting request API](https://developers.google.com/workspace/docs/api/reference/rest/v1/documents/request).
