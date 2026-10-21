@@ -52,7 +52,7 @@ class Jobs:
     def configure(self, arguments):
         data = json_input(arguments)
         allowed = {'source_folder_ids', 'local_source_dirs', 'jd_folder_id', 'resume_doc_id',
-                   'cover_letter_folder_id', 'tracker_id', 'tracker_tab', 'tracker_columns',
+                   'cover_letter_folder_id', 'tracker_id', 'tracker_tab',
                    'sandbox_folder_id', 'resume_tab_ids'}
         if set(data) - allowed:
             raise ValueError('Unknown configuration key(s). See docs/COMMANDS.md.')

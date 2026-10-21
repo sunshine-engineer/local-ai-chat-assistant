@@ -18,11 +18,11 @@ The initial adapter uses Google REST APIs, with OAuth scopes for reading Drive a
 Resource IDs are the ID portions of Google URLs. Source folders are read only. Only explicitly configured output documents/folders and the tracker receive writes.
 
 ```text
-/configure {"sandbox_folder_id":"SANDBOX_FOLDER_ID","source_folder_ids":["SOURCE_FOLDER_ID"],"local_source_dirs":["/absolute/project/docs"],"jd_folder_id":"SANDBOX_FOLDER_ID","resume_doc_id":"RESUME_DOC_ID","cover_letter_folder_id":"SANDBOX_FOLDER_ID","tracker_id":"SPREADSHEET_ID","tracker_tab":"Applications","tracker_columns":{"application_id":"Application ID","company":"Company","role":"Role","job_url":"Job URL","jd_url":"JD","resume_url":"Resume","status":"Status","prepared_date":"Prepared Date"}}
+/configure {"sandbox_folder_id":"SANDBOX_FOLDER_ID","source_folder_ids":["SOURCE_FOLDER_ID"],"local_source_dirs":["/absolute/project/docs"],"jd_folder_id":"SANDBOX_FOLDER_ID","resume_doc_id":"RESUME_DOC_ID","cover_letter_folder_id":"SANDBOX_FOLDER_ID","tracker_id":"SPREADSHEET_ID","tracker_tab":"Applications"}
 /sources
 ```
 
-Configure only what the current module needs. Tracker headers must match your existing sheet; a dedicated Application ID column is required for reliable retries. No columns are silently created.
+Configure only what the current module needs. The tracker module creates a dedicated Assistant Applications tab with an Application ID column for reliable retries; it preserves your existing sheets.
 
 ## Save a JD
 
@@ -79,7 +79,7 @@ Suggestions cite exact source excerpts but their factual meaning is not mechanic
 /application_summary APPLICATION_ID
 ```
 
-`/init_tracker` creates only the dedicated `Assistant Applications` tab in the copied workbook. The original tracker layout contains custom scoring columns; this first version preserves them and uses a dedicated tab instead of forcing a new schema onto existing data. Configure `tracker_tab` as `Assistant Applications`. `tracker_columns` is reserved for future existing-header mapping; this version uses fixed documented headers and does not interpret that setting.
+`/init_tracker` creates only the dedicated `Assistant Applications` tab in the copied workbook. The original tracker layout contains custom scoring columns; this first version preserves them and uses a dedicated tab instead of forcing a new schema onto existing data. Configure `tracker_tab` as `Assistant Applications`. Custom tracker-column mappings are deferred; this version uses the documented fixed headers.
 
 Tracking first previews the proposed row. `--write` saves only after current resume approval. Dates use Asia/Kolkata. Status is Prepared, never Applied. The command checks duplicate application IDs and job URLs, refuses occupied/formula-containing reserved rows, writes RAW text and reads back the exact row. Capacity is 999 entries. Local state locking prevents two app commands from writing simultaneously; Sheets has no cell compare-and-swap here, so avoid manually editing the dedicated tab during a write. Existing tabs and formulas receive no update requests.
 
