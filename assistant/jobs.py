@@ -19,8 +19,12 @@ class Jobs:
         self.google.sandbox_folder_id = self.store.get('config', {}).get('sandbox_folder_id')
 
     def register(self, registry):
-        from assistant import evidence
+        from assistant import evidence, resumes
         commands = [
+            ('draft_resume', 'Copy the recommended resume into a new sandbox tab.', lambda a: resumes.draft(self, a)),
+            ('suggest_edits', 'Suggest cited resume changes without writing to Google.', lambda a: resumes.suggest(self, a)),
+            ('apply_edits', 'Apply selected reviewed edit IDs from a JSON payload.', lambda a: resumes.apply(self, a)),
+            ('approve_resume', 'Record your review of draft content and layout.', lambda a: resumes.approve(self, a)),
             ('refresh_sources', 'Read configured reference files and resume tabs.', lambda a: evidence.refresh(self, a)),
             ('show_sources', 'List source catalogue and skipped files.', lambda a: evidence.show(self, a)),
             ('compare_resume', 'Compare an application ID against resume and project evidence.', lambda a: evidence.compare(self, a)),
