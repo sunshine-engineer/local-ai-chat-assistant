@@ -4,6 +4,7 @@ from assistant.evidence import digest
 from assistant.google import tabs, body_text
 from assistant.model import generate_json
 from assistant.schemas import edits_for
+from assistant.edit_policy import protected_edit, new_numeric_claim
 from assistant.state import json_input
 
 
@@ -83,6 +84,8 @@ def draft(jobs, arguments):
     comparison = app.get('comparison')
     if not comparison:
         raise ValueError('Run /compare_resume first.')
+    from assistant.comparison_review import reviewed_sources
+    reviewed_sources(app)
     selected = next(s for s in app['source_snapshot'] if s['id'] == comparison['recommended_source_id'])
     doc_id = selected['doc_id']
     jobs.google.check_write(doc_id)
@@ -141,6 +144,10 @@ def validate_edits(output, text, sources):
             raise ValueError('Each edit must replace one unique non-empty text span within a paragraph.')
         if source_id not in by_id or not quote.strip() or quote not in by_id[source_id]:
             raise ValueError('Edit requires an exact source citation.')
+        if protected_edit(text, before):
+            raise ValueError('JD tailoring cannot change detected name/contact lines. Edit identity details manually in the sandbox copy.')
+        if new_numeric_claim(before, after, quote):
+            raise ValueError('Replacement introduces numerical claims absent from the original span and cited evidence.')
         start = text.index(before)
         end = start + len(before)
         if any(start < b and end > a for a, b in spans):
@@ -152,6 +159,8 @@ def validate_edits(output, text, sources):
 
 def suggest(jobs, arguments, model=generate_json):
     app_id, app = jobs.application(arguments)
+    from assistant.comparison_review import generation_sources
+    sources = generation_sources(app)
     state = app.get('draft', {})
     if not state.get('ready'):
         raise ValueError('Run /draft_resume first.')
@@ -162,14 +171,20 @@ def suggest(jobs, arguments, model=generate_json):
     output = model('Return {"edits":[{"before":"unique exact resume text","after":"replacement within same paragraph",'
         '"source_id":"supplied source ID","quote":"exact source evidence"}]}. Maximum 20 edits. '
         'Use only supplied facts. No invented metrics, employers, skills, years, or commercial GenAI experience. '
-        'Improve relevance to the JD. Preserve personal portfolio versus employment distinction. before and after must contain no newline characters and must differ. Return edits:[] when there is no useful supported change.',
-        {'jd': app['input']['jd'], 'resume': text, 'sources': app['source_snapshot']}, schema=edits_for(text, app['source_snapshot']))
-    edits = validate_edits(output, text, app['source_snapshot'])
-    app['suggestions'] = {'base_text': text, 'edits': edits}
+        'Improve relevance to the JD. Do not alter identity/contact lines or introduce numerical claims absent from the original span and cited quotation. Preserve personal portfolio versus employment distinction. before and after must contain no newline characters and must differ. Return edits:[] when there is no useful supported change.',
+        {'jd': app['input']['jd'], 'resume': text, 'sources': sources}, schema=edits_for(text, sources))
+    edits = validate_edits(output, text, sources)
+    app['suggestions'] = {'base_text': text, 'edits': edits, 'comparison_id': app['comparison']['comparison_id']}
+    app['suggestions']['edit_batch_id'] = edit_batch_id(app['suggestions'])
     app['reviewed'] = False
     jobs.save(app_id, app)
-    return json.dumps({'edits': [{'edit_id': i, **e} for i, e in enumerate(edits)],
+    return json.dumps({'edit_batch_id': app['suggestions']['edit_batch_id'],
+        'edits': [{'edit_id': i, **e} for i, e in enumerate(edits)],
         'review_required': 'Review every replacement and citation. Exact quotes do not prove semantic support. /apply_edits requires explicit reviewed:true.'}, indent=2)
+
+
+def edit_batch_id(suggestions):
+    return digest({key: suggestions.get(key) for key in ('base_text', 'edits', 'comparison_id')})[:16]
 
 
 def replacement_requests(text, edits, tab_id):
@@ -191,7 +206,15 @@ def apply(jobs, arguments):
     if data.get('reviewed') is not True:
         raise ValueError('Review the suggestions and supply reviewed:true to apply selected edits.')
     app_id, app = jobs.application(data.get('application_id', ''))
+    from assistant.comparison_review import reviewed_sources
+    reviewed_sources(app)
     state, suggestions = app.get('draft', {}), app.get('suggestions')
+    if suggestions and suggestions.get('comparison_id') != app['comparison']['comparison_id']:
+        raise ValueError('Suggestions predate this reviewed comparison. Generate fresh suggestions.')
+    if suggestions and (not isinstance(data.get('edit_batch_id'), str) or
+            data['edit_batch_id'] != suggestions.get('edit_batch_id') or
+            data['edit_batch_id'] != edit_batch_id(suggestions)):
+        raise ValueError('Supply the current edit_batch_id from /suggest_edits; stale or changed proposals cannot be applied.')
     ids = data.get('edit_ids')
     if not suggestions or not isinstance(ids, list) or not ids or any(type(i) is not int or i < 0 or i >= len(suggestions['edits']) for i in ids) or len(set(ids)) != len(ids):
         raise ValueError('Provide valid unique edit_ids from /suggest_edits.')
@@ -199,6 +222,8 @@ def apply(jobs, arguments):
     if app.get('applied_signature') == signature and app.get('applied_suggestions') == digest(suggestions):
         return 'These selected edits were already applied. ' + state['url']
     selected = [suggestions['edits'][i] for i in ids]
+    from assistant.comparison_review import generation_sources
+    validate_edits({'edits': selected}, suggestions['base_text'], generation_sources(app))
     expected, requests = replacement_requests(suggestions['base_text'], selected, state['tab_id'])
     pending = {'signature': signature, 'before': suggestions['base_text'], 'after': expected}
     if app.get('pending_edits') and app['pending_edits'] != pending:
@@ -225,6 +250,8 @@ def apply(jobs, arguments):
 
 def approve(jobs, arguments):
     app_id, app = jobs.application(arguments)
+    from assistant.comparison_review import reviewed_sources
+    reviewed_sources(app)
     state = app.get('draft', {})
     if not state.get('ready') or app.get('pending_edits'):
         raise ValueError('A completed draft without pending writes is required.')

@@ -32,8 +32,11 @@ class LiveServicesTest(unittest.TestCase):
             result = json.loads(compare(jobs, 'live-test'))
             matches = result['resumes'][0]['matches']
             self.assertTrue(any('RAG' in r for r in result['requirements']), 'Desirable requirement omitted')
-            self.assertTrue(any('Python' in m['requirement'] and m['status'] == 'supported' for m in matches))
-            self.assertTrue(any('Kubernetes' in m['requirement'] and m['status'] == 'gap' for m in matches))
+            self.assertTrue(all(m['status'] == 'needs_review' for m in matches))
+            self.assertIsNone(result['recommended_source_id'])
+            self.assertIsNone(result['resumes'][0]['counts'])
+            self.assertTrue(any('Python' in m['requirement'] and m['proposed_status'] == 'supported' for m in matches))
+            self.assertTrue(any('Kubernetes' in m['requirement'] and m['proposed_status'] == 'gap' for m in matches))
 
     @unittest.skipUnless(os.getenv('ASSISTANT_LIVE_DATABASE_URL'), 'Set ASSISTANT_LIVE_DATABASE_URL for disposable PostgreSQL')
     def test_real_postgres_chat_persistence(self):

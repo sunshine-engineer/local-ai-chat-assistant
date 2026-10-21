@@ -122,8 +122,9 @@ def assess(requirements, source, kind, model):
 
 
 def compare(jobs, arguments, model=generate_json):
+    from assistant.comparison_review import proposals
     app_id, app = jobs.application(arguments)
-    if app.get('draft'):
+    if app.get('draft') or app.get('cover_letter_draft'):
         raise ValueError('Comparison is fixed once a draft is created. Continue reviewing that draft; use a new JD input for a separate application variant.')
     catalogue = jobs.store.get('catalogue')
     if not catalogue:
@@ -136,8 +137,8 @@ def compare(jobs, arguments, model=generate_json):
             continue
         matches = assess(requirements, source['text'], 'resume', model)
         counts = {status: sum(m['status'] == status for m in matches) for status in ('supported', 'partial', 'gap')}
-        comparisons.append({'source_id': source['id'], 'title': source['title'], 'url': source['url'], 'counts': counts, 'matches': matches})
-    comparisons.sort(key=lambda c: (-c['counts']['supported'], -c['counts']['partial'], c['source_id']))
+        comparisons.append({'source_id': source['id'], 'title': source['title'], 'url': source['url'],
+            'proposed_counts': counts, 'counts': None, 'review_state': 'needs_review', 'matches': proposals(matches, source)})
     if not comparisons:
         raise ValueError('No resumes in catalogue.')
     # Project evidence is assessed separately, never counted as experience on the resume.
@@ -145,11 +146,13 @@ def compare(jobs, arguments, model=generate_json):
     for source in catalogue['sources']:
         if source['kind'] != 'evidence' or not source['text'].strip():
             continue
-        evidence.append({'source_id': source['id'], 'url': source['url'],
-                         'matches': assess(requirements, source['text'], 'evidence', model)})
-    result = {'requirements': requirements, 'recommended_source_id': comparisons[0]['source_id'],
+        evidence.append({'source_id': source['id'], 'url': source['url'], 'counts': None, 'review_state': 'needs_review',
+            'matches': proposals(assess(requirements, source['text'], 'evidence', model), source)})
+    result = {'requirements': requirements, 'recommended_source_id': None, 'review_version': 1, 'reviews': {},
+              'source_digest': digest(catalogue['sources']), 'jd_digest': digest(app['input']['jd']),
               'resumes': comparisons, 'project_evidence': evidence, 'catalogue_digest': catalogue['digest'],
-              'warning': 'Counts cover only the manually selected JD requirements. Model judgments require human review. Exact quotations are verified; semantic support and source truth are not. Counts are not an ATS score or hiring prediction.'}
+              'warning': 'All model results are unreviewed proposals. No resume is selected and no accepted counts exist until /review_comparison. Flags are incomplete heuristics, not entailment checks. Counts cover only selected JD sentences and are not an ATS score.'}
+    result['comparison_id'] = digest({'result': result, 'sources': catalogue['sources']})[:16]
     app['comparison'] = result
     app['source_snapshot'] = catalogue['sources']
     jobs.save(app_id, app)

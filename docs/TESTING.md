@@ -14,7 +14,7 @@ The PRs are stacked. Test the latest stack branch to exercise all modules withou
 
 ```bash
 git fetch origin
-git switch feat/readonly-project-evidence
+git switch feat/comparison-review-controls
 ```
 
 If you already have uncommitted work, preserve it before switching. Review/merge order is documented in [REVIEW.md](REVIEW.md). Do not merge to run these tests.
@@ -152,12 +152,15 @@ python -m assistant.cli /save_jd < examples/jd.sample.json
 | 5a | `/requirements APPLICATION_ID` | Every JD sentence/line candidate is listed; no model silently drops content | None |
 | 5b | `/review_requirements` with reviewed candidate IDs | Only selected scope is saved; for the synthetic sample select IDs 1, 2, 3 | None |
 | 6 | `/compare_resume APPLICATION_ID` | Every selected requirement has one match; citations, gaps and scope-limited counts appear | None |
+| 6a | `/show_comparison APPLICATION_ID` | Proposed statuses, flags, snapshot ID and incomplete review template | None |
+| 6b | `/review_comparison` with completed decisions for every requirement | Explicit selected resume; accepted counts are reviewer decisions; project sources reviewed separately | None |
 | 7 | `/draft_resume APPLICATION_ID` | Exactly one new draft tab; previous tabs and source resume remain intact | New tab in copied Doc |
 | 8 | `/suggest_edits APPLICATION_ID` | Proposed before/after text and source citations; no remote resume edit | None |
 | 9 | `/apply_edits` with reviewed JSON | Only selected edits appear in the owned draft tab | Draft tab only |
 | 10 | Inspect the draft in Google Docs/PDF | Facts, headings, links, page count and spacing are acceptable | Manual review |
 | 11 | `/approve_resume APPLICATION_ID` | Your review of the current content/layout is recorded | None |
 | 12, optional | `/draft_cover_letter APPLICATION_ID` | Draft link and evidence list; review wording and layout manually | New Doc in sandbox |
+| 12a, if drafted | `/show_cover_letter`, then `/review_cover_letter` with current text hash and approve/omit decision | Unreviewed draft blocks tracking; changed approved text requires renewed review; omitted draft stays accessible | None |
 | 13 | `/init_tracker` | Dedicated Assistant Applications tab; existing tabs/formulas unchanged | New tab in copied Sheet |
 | 14 | `/track_application APPLICATION_ID` | Proposed row appears; sheet has no new row yet | None |
 | 15 | `/track_application APPLICATION_ID --write` | One verified row with artifact links and Prepared status | Dedicated tracker tab |
@@ -165,10 +168,12 @@ python -m assistant.cli /save_jd < examples/jd.sample.json
 
 For step 5b, the sample payload is `/review_requirements {"application_id":"APPLICATION_ID","candidate_ids":[1,2,3],"reviewed":true}`. Choose IDs from your actual JD before comparing; the small model does not select scope.
 
+For step 6b, read [comparison review](COMMANDS.md#review-comparison-evidence-before-using-it). Copy the template from `/show_comparison`; fill every verdict, quotation, note and required flag acknowledgement. Counts remain provisional and drafting/approval/tracking are blocked until this review. Review needed projects before drafting.
+
 For step 9, use only edit IDs you actually reviewed. Example payload:
 
 ```json
-{"application_id":"APPLICATION_ID","edit_ids":[0],"reviewed":true}
+{"application_id":"APPLICATION_ID","edit_ids":[0],"edit_batch_id":"CURRENT_BATCH_ID","reviewed":true}
 ```
 
 Paste the payload after `/apply_edits` in the UI, or save it privately and pipe it into `python -m assistant.cli /apply_edits` using the same stdin patterns above. If no suggestions are suitable, skip applying edits, review the copied resume, and approve that version.
@@ -263,3 +268,17 @@ Use [TEST_REPORT_TEMPLATE.md](TEST_REPORT_TEMPLATE.md) for review evidence. Dist
 3. Inspect Docker mount metadata: `/evidence` must have `RW: false`. A host-file hash comparison before/after ingestion should match. Tests must not attempt to overwrite original files just to check read-only behavior.
 4. Compare a reviewed required/desirable skill and a commercial-production requirement without evidence. Project results must remain separate from resume experience and never prove employment/deployment by themselves. Inspect quotations and statuses manually; a structurally valid result is not a semantic-quality pass.
 5. Confirm the UI and CLI share the same private workflow state and that Google outputs remain sandbox-only.
+
+
+## Comparison control and model-quality regressions
+
+```bash
+python -m unittest discover -s tests -p test_comparison_review.py -v
+python -m assistant.evaluate
+```
+
+The first command checks the controls with synthetic fixtures and provider doubles. The second invokes the configured local model against eight small public known-failure cases; it uses no Google credentials, writes no application state, and prints JSON. Exit 1 means at least one invalid response, wrong fixture verdict or unsupported fixture quotation. Failed cases remain in the denominator. Passing these cases is not a representative accuracy benchmark and never removes the review gate.
+
+The fixture file is `assistant/comparison_cases.json`. Review expected labels/quotes before extending it. Add cases when a real failure is reproduced with sanitized synthetic facts. Keep model/context settings and the fixture digest with evaluation results. Include new role requirements and evidence styles when building a broader evaluation set; do not tune only to these eight examples.
+
+Acceptance: bad name-only, future-work, production-qualifier and incomplete-skill proposals remain unaccepted; no model result can choose a resume or authorize downstream writes. Stale, partial and blanket review payloads fail. Corrected reviewer quotations are the only generation facts. An explicit flag override is visible in history; it is not a machine-certified fact.

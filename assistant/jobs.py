@@ -19,13 +19,15 @@ class Jobs:
         self.google.sandbox_folder_id = self.store.get('config', {}).get('sandbox_folder_id')
 
     def register(self, registry):
-        from assistant import evidence, resumes, tracking, package, layout, requirements
+        from assistant import evidence, resumes, tracking, package, layout, requirements, comparison_review
         commands = [
             ('init_tracker', 'Create a dedicated tab in the sandbox tracker copy.', lambda a: tracking.initialize(self, a)),
             ('track_application', 'Preview a tracker row; add --write to save it.', lambda a: tracking.track(self, a)),
             ('draft_cover_letter', 'Generate and save an optional cited cover-letter draft.', lambda a: package.cover_letter(self, a)),
+            ('show_cover_letter', 'Inspect current letter text and the exact review hash.', lambda a: package.show_letter(self, a)),
+            ('review_cover_letter', 'Explicitly approve or omit a draft letter using its current text hash.', lambda a: package.review_letter(self, a)),
             ('application_summary', 'Show application links, completion and remaining checks.', lambda a: package.summary(self, a)),
-            ('draft_resume', 'Copy the recommended resume into a new sandbox tab.', lambda a: resumes.draft(self, a)),
+            ('draft_resume', 'Copy the explicitly selected resume into a new sandbox tab.', lambda a: resumes.draft(self, a)),
             ('format_resume', 'Preview compact draft formatting; add --write to apply and invalidate approval.', lambda a: layout.format_resume(self, a)),
             ('suggest_edits', 'Suggest cited resume changes without writing to Google.', lambda a: resumes.suggest(self, a)),
             ('apply_edits', 'Apply selected reviewed edit IDs from a JSON payload.', lambda a: resumes.apply(self, a)),
@@ -33,7 +35,9 @@ class Jobs:
             ('approve_resume', 'Record your review of draft content and layout.', lambda a: resumes.approve(self, a)),
             ('refresh_sources', 'Read configured reference files and resume tabs.', lambda a: evidence.refresh(self, a)),
             ('show_sources', 'List source catalogue and skipped files.', lambda a: evidence.show(self, a)),
-            ('compare_resume', 'Compare an application ID against resume and project evidence.', lambda a: evidence.compare(self, a)),
+            ('compare_resume', 'Propose matches for reviewed JD scope; no accepted counts or automatic resume selection.', lambda a: evidence.compare(self, a)),
+            ('show_comparison', 'Inspect proposed results, flags and comparison snapshot ID.', lambda a: comparison_review.show(self, a)),
+            ('review_comparison', 'Record explicit evidence decisions and select a resume from a comparison snapshot.', lambda a: comparison_review.review(self, a)),
             ('requirements', 'List every JD sentence/line candidate for scope review.', lambda a: requirements.show(self, a)),
             ('review_requirements', 'Save selected JD candidate IDs using reviewed:true.', lambda a: requirements.review(self, a)),
             ('google_connect', 'CLI only: connect using an OAuth Desktop client JSON path.', self.connect),
@@ -101,11 +105,15 @@ class Jobs:
 
     def save_jd(self, arguments):
         data = json_input(arguments)
-        allowed = {'jd', 'company', 'role', 'url'}
+        allowed = {'jd', 'company', 'role', 'url', 'variant'}
         if set(data) - allowed or not isinstance(data.get('jd'), str) or not data['jd'].strip():
             raise ValueError('Provide jd text plus optional company, role and url strings.')
         if not all(isinstance(v, str) for v in data.values()):
             raise ValueError('JD fields must be strings.')
+        if 'variant' in data:
+            data['variant'] = data['variant'].strip()
+            if not 1 <= len(data['variant']) <= 80:
+                raise ValueError('variant must contain 1–80 characters.')
         if len(data['jd']) > 100000:
             raise ValueError('JD is too long (limit 100,000 characters).')
         app_id = hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
@@ -113,7 +121,9 @@ class Jobs:
         folder = app.setdefault('jd_folder_id', self.config('jd_folder_id'))
         self.save(app_id, app)
         text = (f"{data.get('role') or 'Role unknown'} — {data.get('company') or 'Company unknown'}\n\n"
-                f"Job URL: {data.get('url') or 'Unknown'}\nApplication ID: {app_id}\n\nOriginal job description\n\n{data['jd']}\n")
+                f"Job URL: {data.get('url') or 'Unknown'}\nApplication ID: {app_id}\n"
+                + (f"Variant: {data['variant']}\n" if data.get('variant') else '')
+                + f"\nOriginal job description\n\n{data['jd']}\n")
         app['jd_url'] = self.google.create_document(folder, f'JD — {app_id}', app_id + '-jd', text)
         self.save(app_id, app)
         return f"Application ID: {app_id}\nJD saved and content verified: {app['jd_url']}"

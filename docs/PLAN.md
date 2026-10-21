@@ -6,7 +6,7 @@ Goal: turn a pasted JD into an evidence-based application package through explic
 |---|---|---|
 | 0–1 | Local setup, /help, /status, action registry | Self-hosted Ollama; no external tracing required |
 | 2–3 | Google authentication, source settings, /save_jd | Configured folders only; preserve original JD |
-| 4–5 | Source catalogue, /requirements, /review_requirements, /compare_resume | Reviewed JD scope; read-only evidence; no ATS predictions |
+| 4–5 | Source catalogue, /requirements, /review_requirements, /compare_resume, /review_comparison | Reviewed JD scope; read-only evidence; no ATS predictions |
 | 6 | /draft_resume, /format_resume, /suggest_edits, /apply_edits | New tab only; originals preserved |
 | 7 | /track_application | Dedicated copied-workbook tab; preserve existing tabs/formulas; status Prepared |
 | 8–9 | Cover letter and application summary | Optional letter; no job submission |
@@ -38,3 +38,6 @@ Offline checks: `python -m unittest discover -s tests -v`.
 ## Next acceptance priority
 
 The command flow, Google sandbox writes, read-only project ingestion, compact formatting and clean container image have been exercised. Model comparison quality remains a critical gap: real-JD tests produced valid JSON with unsupported judgments. Before reducing manual review, create representative reviewed comparison fixtures covering production qualifiers, partial skill coverage, name-only/irrelevant quotations, planned versus completed work, and independent portfolio versus commercial employment. Evaluate self-hosted models against those fixtures and block unsupported conclusions. A successful API call or exact quotation alone does not pass that gate. Voice and automation remain deferred.
+
+
+Comparison control version 1 now separates model proposals from accepted reviewer decisions. It removes automatic resume selection, requires a snapshot-bound decision for each selected requirement, keeps override history, and limits generation to accepted quotations. Eight synthetic failure regressions exercise the gate. Model semantic accuracy remains an open evaluation task; these controls contain unreliable judgments rather than claim to fix model reasoning. Broader reviewed cases are required before considering any reduction in manual control.

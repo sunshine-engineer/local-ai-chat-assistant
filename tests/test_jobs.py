@@ -38,6 +38,22 @@ class JobsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.jobs.application('missing')
 
+    def test_variant_preserves_jd_and_original_application_and_retries_stably(self):
+        import json
+        self.jobs.configure('{"jd_folder_id":"folder"}')
+        original={'jd':'Original exact JD','url':'https://example.com/job'}
+        first=self.jobs.save_jd(json.dumps(original))
+        original_key=self.google.calls[-1][1]
+        second=self.jobs.save_jd(json.dumps({**original,'variant':' controls-v1 '}))
+        variant_key=self.google.calls[-1][1]
+        self.assertNotEqual(original_key,variant_key)
+        self.assertEqual(second,self.jobs.save_jd(json.dumps({**original,'variant':'controls-v1'})))
+        self.assertIn('Original job description\n\nOriginal exact JD\n',self.google.calls[-1][2])
+        self.assertIn('Variant: controls-v1',self.google.calls[-1][2])
+        self.assertEqual(first,self.jobs.save_jd(json.dumps(original)))
+        for value in ('','   ','x'*81):
+            with self.assertRaises(ValueError):self.jobs.save_jd(json.dumps({**original,'variant':value}))
+
     def test_state_survives_failed_action(self):
         with self.assertRaises(ValueError):
             with self.store.action_lock():

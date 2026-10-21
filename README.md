@@ -10,10 +10,10 @@ A single-user, command-first assistant built with Python, Streamlit, Ollama and 
 | Google configuration | `/google_connect`, `/configure`, `/sources` | App-owned OAuth; sandbox writes only |
 | JD capture | `/save_jd` | Original text preserved in a new Google Doc |
 | Source catalogue | `/refresh_sources`, `/show_sources` | Selected resume tabs, Docs, local Markdown/text |
-| JD scope and comparison | `/requirements`, `/review_requirements`, `/compare_resume` | Review selected JD sentences before model comparison; judgments require review |
+| JD scope and comparison | `/requirements`, `/review_requirements`, `/compare_resume`, `/show_comparison`, `/review_comparison` | Review selected JD sentences before model comparison; judgments require review |
 | Resume tailoring | `/draft_resume`, `/format_resume`, `/suggest_edits`, `/apply_edits`, `/reset_edits`, `/approve_resume` | New tab; explicit reviewed edits only |
 | Tracking | `/init_tracker`, `/track_application` | Dedicated tab in copied workbook; Prepared status |
-| Application package | `/draft_cover_letter`, `/application_summary` | Optional letter; no automatic submission |
+| Application package | `/draft_cover_letter`, `/show_cover_letter`, `/review_cover_letter`, `/application_summary` | Optional letter; no automatic submission |
 
 This is a development implementation, not a verified production deployment. Voice, automation, autonomous multi-agent workflows, and general-purpose Google editing are deferred. Google REST access is behind a separate adapter; an MCP client is not implemented yet.
 
@@ -50,11 +50,15 @@ Typical sequence:
 /requirements APPLICATION_ID
 /review_requirements {"application_id":"APPLICATION_ID","candidate_ids":[1,2,3],"reviewed":true}
 /compare_resume APPLICATION_ID
+/show_comparison APPLICATION_ID
+# Fill its review template, then submit /review_comparison with that JSON.
 /draft_resume APPLICATION_ID
 /suggest_edits APPLICATION_ID
-/apply_edits {"application_id":"APPLICATION_ID","edit_ids":[0],"reviewed":true}
+/apply_edits {"application_id":"APPLICATION_ID","edit_ids":[0],"edit_batch_id":"CURRENT_BATCH_ID","reviewed":true}
 /approve_resume APPLICATION_ID
 /draft_cover_letter APPLICATION_ID
+/show_cover_letter APPLICATION_ID
+# Inspect every claim, then approve or omit using its review template.
 /init_tracker
 /track_application APPLICATION_ID
 /track_application APPLICATION_ID --write
@@ -63,7 +67,7 @@ Typical sequence:
 
 If the copied resume needs tighter spacing, preview `/format_resume APPLICATION_ID`, then use `--write` to apply the compact preset. Text stays unchanged; approval is invalidated. Export and inspect the PDF before approving again. Formatting does not guarantee a page count.
 
-The candidate IDs above apply only to the synthetic sample JD. For your own JD, inspect `/requirements` and select every relevant duty, qualification and required/desirable skill. The small model is not trusted to choose comparison scope.
+The candidate IDs above apply only to the synthetic sample JD. For your own JD, inspect `/requirements` and select every relevant duty, qualification and required/desirable skill. The small model is not trusted to choose comparison scope or certify its own judgments. All returned verdicts remain `needs_review`, with accepted counts unset and no selected resume. Use `/show_comparison` to get an incomplete review template; complete every decision and submit `/review_comparison`. Review projects needed for generation before creating any draft. Generation uses only accepted quotations; final resume edits and tracking still require their own review.
 
 Cover letters are optional. `/track_application` previews; adding `--write` saves. Use the application ID returned by `/save_jd`. CLI commands also accept JSON on stdin: `python -m assistant.cli /save_jd < jd.json`.
 

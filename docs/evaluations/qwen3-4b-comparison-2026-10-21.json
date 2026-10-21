@@ -1,0 +1,61 @@
+{
+  "cases": 8,
+  "fixture_passes": 0,
+  "fixture_digest": "71d6486cc681936bc242dd36184c0741935f0a33b8fcb37e7cf4463f5b94285c",
+  "policy_version": "comparison-review-v1",
+  "invalid_responses": 8,
+  "automatic_acceptance_enabled": false,
+  "results": [
+    {
+      "case_id": "name_only",
+      "valid_response": false,
+      "fixture_pass": false
+    },
+    {
+      "case_id": "production_qualifier",
+      "valid_response": false,
+      "fixture_pass": false
+    },
+    {
+      "case_id": "partial_stack",
+      "valid_response": false,
+      "fixture_pass": false
+    },
+    {
+      "case_id": "planned_work",
+      "valid_response": false,
+      "fixture_pass": false
+    },
+    {
+      "case_id": "negated_experience",
+      "valid_response": false,
+      "fixture_pass": false
+    },
+    {
+      "case_id": "project_not_employment",
+      "valid_response": false,
+      "fixture_pass": false
+    },
+    {
+      "case_id": "supported_literal",
+      "valid_response": false,
+      "fixture_pass": false
+    },
+    {
+      "case_id": "explicit_gap",
+      "valid_response": false,
+      "fixture_pass": false
+    }
+  ],
+  "limit": "Eight synthetic known-failure regressions, not a representative benchmark. Failed/invalid cases remain in the denominator. Human comparison review is always required, regardless of this result.",
+  "model": "qwen3:4b",
+  "context_tokens": 4096,
+  "run_date": "2026-10-21",
+  "settings": {
+    "temperature": 0,
+    "think": false,
+    "context_tokens": 4096,
+    "output_token_limit": 4096
+  },
+  "note": "No valid comparison output. The Ollama service logged llama-server being killed during startup. This run does not measure semantic accuracy. Failure categories were not captured by this earlier runner version; future runs separate service/transport failures from invalid output and domain validation."
+}

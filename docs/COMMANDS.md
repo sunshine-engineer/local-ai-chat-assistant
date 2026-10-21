@@ -48,7 +48,7 @@ References: [OAuth desktop flow](https://developers.google.com/identity/protocol
 - `/show_sources`: lists catalogue IDs and links.
 - `/requirements APPLICATION_ID`: lists every exact non-empty JD sentence/line candidate, without a model call or Google write.
 - `/review_requirements {"application_id":"APPLICATION_ID","candidate_ids":[1,2,3],"reviewed":true}`: saves 1–30 reviewed candidate IDs. Include required and desirable skills, duties and qualifications; exclude marketing and application instructions. IDs depend on the JD; inspect the list first. Scope becomes fixed once a resume or letter draft exists.
-- `/compare_resume APPLICATION_ID`: requires reviewed JD scope, assesses every selected sentence against each resume, recommends by supported/partial counts, then assesses supporting documents separately. Counts cover only selected sentences; they are not a complete-JD score. Saves a source snapshot with results. Exact quotations are validated; model interpretations still need review. Model calls assess at most three requirements per batch by default to bound output size.
+- `/compare_resume APPLICATION_ID`: requires reviewed JD scope, assesses every selected sentence against each resume, keeps model counts provisional, then assesses supporting documents separately. Counts cover only selected sentences; they are not a complete-JD score. Saves a source snapshot with results. Exact quotations are validated; model interpretations still need review. Model calls assess at most three requirements per batch by default to bound output size.
 
 Set `resume_tab_ids` to the tab IDs you want compared. Otherwise non-empty tabs except cover letters and app-generated drafts are candidates. Keep the candidate set small for initial tests. Readmes are portfolio evidence, not proof of production work. Source content is sent only to the configured Ollama endpoint. Set OLLAMA_CONTEXT (default 16384) and ASSISTANT_PROMPT_CHAR_LIMIT (default 24000) for your model and hardware; oversized input fails rather than being silently truncated. Model quality/latency is not validated by offline tests.
 
@@ -63,11 +63,11 @@ Your existing tracker can stay unchanged inside its copy. The tracking module wi
 ```text
 /draft_resume APPLICATION_ID
 /suggest_edits APPLICATION_ID
-/apply_edits {"application_id":"APPLICATION_ID","edit_ids":[0,2],"reviewed":true}
+/apply_edits {"application_id":"APPLICATION_ID","edit_ids":[0,2],"edit_batch_id":"CURRENT_BATCH_ID","reviewed":true}
 /approve_resume APPLICATION_ID
 ```
 
-Drafting copies the recommended resume into a new `Assistant — APPLICATION_ID` tab inside the sandbox resume document. It preserves paragraph and text styles for paragraph-only templates. Tables, native lists, embedded objects, header/footer content and unresolved suggestions are rejected before creating a draft. The two general resume tabs inspected in the supplied sandbox copy use supported text/paragraph structures. Rendering/PDF fidelity still needs manual review.
+Drafting copies the explicitly selected, comparison-reviewed resume into a new `Assistant — APPLICATION_ID` tab inside the sandbox resume document. It preserves paragraph and text styles for paragraph-only templates. Tables, native lists, embedded objects, header/footer content and unresolved suggestions are rejected before creating a draft. The two general resume tabs inspected in the supplied sandbox copy use supported text/paragraph structures. Rendering/PDF fidelity still needs manual review.
 
 Suggestions cite exact source excerpts but their factual meaning is not mechanically proven. Review them before applying. Only selected edits are applied, within the owned draft tab, with revision guards and readback. Other tabs are checked for changes. Repeating the same completed command does not apply edits twice. An ambiguous write must be reconciled using the same command before generating new suggestions. `/approve_resume` is your declaration that you inspected the current content and layout; the app does not claim automated PDF validation.
 
@@ -147,3 +147,55 @@ docker compose exec -T chatbot python -m assistant.cli /show_sources
 PowerShell: `Get-Content -Raw private-config.json | docker compose exec -T chatbot python -m assistant.cli /configure`.
 
 The browser OAuth command still runs on the host, with private `.assistant` state shared into the app. A host Python UI/CLI uses actual host paths in `local_source_dirs`; `/evidence` is only the container mount. Do not alternate host and container catalogue refresh commands against one configuration whose paths only exist in one environment.
+
+
+## Review comparison evidence before using it
+
+```text
+/compare_resume APPLICATION_ID
+/show_comparison APPLICATION_ID
+/review_comparison { ...completed review template... }
+/draft_resume APPLICATION_ID
+```
+
+Every model verdict is returned as `proposed_status` alongside `status: needs_review`. `proposed_counts` are informational; accepted `counts` remain null and `recommended_source_id` remains null. There is no automatic ranking/selection based on model judgments. `/show_comparison` provides the frozen source texts/links, snapshot ID and an intentionally incomplete template that cannot be accepted unchanged.
+
+For a **one-requirement** comparison, a completed payload has this shape:
+
+```json
+{
+  "application_id": "APPLICATION_ID",
+  "comparison_id": "EXACT_COMPARISON_ID",
+  "source_id": "CHOSEN_RESUME_SOURCE_ID",
+  "reviewed": true,
+  "decisions": [{
+    "requirement_id": 0,
+    "status": "supported",
+    "quote": "EXACT SUPPORTING SOURCE TEXT",
+    "note": "Explain which requirement this evidence supports and what remains unproven.",
+    "acknowledged_flags": []
+  }]
+}
+```
+
+Supply one unique decision for **every** selected requirement. Choose supported, partial or gap yourself. Gap quotations must be empty; other quotations must occur literally in that frozen source. Every decision needs a note. Reviewing a resume explicitly selects it. Review each project source needed for generation separately before creating a resume or cover-letter draft; project documentation alone cannot fully establish commercial/production experience.
+
+Heuristic flags cover missing explicit technology terms, no specific term overlap, missing production/commercial qualifiers, and future/negated context. They are incomplete and can be wrong. Correct the verdict/quote, or explicitly list every remaining flag in `acknowledged_flags` with an explanatory note. Overrides are retained in review history. A clean flag list never makes a proposal accepted automatically.
+
+Only the selected reviewed resume and reviewed projects contribute evidence to generation. Their generation text contains only accepted non-gap quotations. All-gap reviews can still lead to a manually inspected resume copy, but cannot generate unsupported suggestions/letters. Accepted quotes still do not prove that a model's new wording follows from them: inspect every proposed edit and letter.
+
+Recomparison resets selection and decisions. Review payloads bind to the comparison ID, JD and source snapshot. Decisions freeze after a resume or letter draft exists. Comparisons created before review version 1 cannot authorize new generation, approval or tracking; their artifacts are preserved. Start a new application variant to use the controlled flow: submit the same `/save_jd` fields with an additional `"variant":"comparison-review-v1"`. The label creates separate state without changing JD text, role, company or job URL. Identical labels/inputs retry stably; existing artifacts are retained. Tracker duplicate-job-URL protection still applies, so reconcile an already tracked job manually instead of creating a second entry. No original document is changed by these review commands. `/show_comparison` includes personal reference text: keep its output private.
+
+
+Tailoring also protects detected name/contact lines and rejects new digit-based numerical claims absent from both the original span and accepted citation. These checks are deliberately narrow heuristics, not factual certification. Edits and cached cover-letter paragraphs are revalidated immediately before remote writes. Each `/suggest_edits` response includes `edit_batch_id`; `/apply_edits` requires that exact ID, selected edit IDs and `reviewed:true`. Regenerating or changing proposals invalidates stale selections instead of reusing an old ID against different text. Legacy suggestions must be regenerated.
+
+
+### Review optional cover letters before inclusion
+
+`/draft_cover_letter APPLICATION_ID` creates a draft, never an approved letter. Run `/show_cover_letter APPLICATION_ID`, inspect the actual Google document against the accepted quotations, and submit its template:
+
+```text
+/review_cover_letter {"application_id":"APPLICATION_ID","text_hash":"CURRENT_TEXT_HASH","decision":"approve","reviewed":true,"note":"Explain the claim-by-claim review."}
+```
+
+Use `"decision":"omit"` to preserve the draft but exclude it from the package and tracker. An unreviewed draft blocks tracking and keeps the summary incomplete. Approval binds to the current document text; later changes require renewed review. Existing tracker rows are never silently rewritten when an inclusion decision changes: reconcile the exact conflicting row manually. Valid citations alone do not prove implementation, production experience, performance or impact.
