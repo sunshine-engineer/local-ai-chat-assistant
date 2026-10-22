@@ -47,7 +47,7 @@ Use a temporary `Store` and explicit provider doubles for offline tests. Exercis
 
 Then run only the authorized sandbox acceptance path against real services. A passing mock test does not prove the API accepts a request or that a document renders correctly. Check output at the layer users consume it: Google readback, tracker range and rendered PDF where relevant.
 
-Update `README.md`, `COMMANDS.md`, `TESTING.md` and `VALIDATION.md`. Publish sanitized evidence in an unmerged PR. Never commit tokens, OAuth client files, personal source text, live test artifacts or credential-bearing logs.
+Update `README.md`, `COMMANDS.md`, `TESTING.md` and `VALIDATION.md`; update `HANDOVER.md` for changed settings, state, recovery or ownership boundaries and `DOCUMENTATION_AUDIT.md` for affected coverage. Publish sanitized evidence in an unmerged PR. Never commit tokens, OAuth client files, personal source text, live test artifacts or credential-bearing logs.
 
 
 ## Preserve the comparison control boundary

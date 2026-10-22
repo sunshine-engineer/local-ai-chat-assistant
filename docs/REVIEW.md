@@ -16,10 +16,13 @@ The implementation is split into stacked PRs. Nothing is merged automatically.
 | 10 | [#10](https://github.com/sunshine-engineer/local-ai-chat-assistant/pull/10) | Read-only reference mount, actual project ingestion and clean-image Compose acceptance |
 | 11 | [#11](https://github.com/sunshine-engineer/local-ai-chat-assistant/pull/11) | Snapshot-bound comparison review, accepted evidence only, protected edits, exact batch approval and cover-letter inclusion review |
 | 12 | [#12](https://github.com/sunshine-engineer/local-ai-chat-assistant/pull/12) | Read-only comparison inspection, explicit proposal/decision separation and command-review walkthrough |
+| 13 | [#13](https://github.com/sunshine-engineer/local-ai-chat-assistant/pull/13) | Documentation audit, corrected examples and development handover runbook |
 
 PR #5 includes page/named style corrections found during live sandbox validation; assess the latest stack for the final behavior. Each PR diff is against its predecessor. Test the top branch before merging if you want to exercise the full app.
 
 After merging a predecessor, inspect the next PR's base and diff before merging it. Retarget it to `main` if GitHub does not do so automatically. A squash merge can leave inherited commits visible in descendant PRs; rebase/resolve that stack deliberately rather than merging duplicate history. Do not delete predecessor branches until the next PR's base/diff is verified.
+
+Start the recipient handover with [HANDOVER.md](HANDOVER.md), then record acceptance using the private test report template. Documentation coverage and unrun checks are listed in [DOCUMENTATION_AUDIT.md](DOCUMENTATION_AUDIT.md).
 
 ## Acceptance checklist
 

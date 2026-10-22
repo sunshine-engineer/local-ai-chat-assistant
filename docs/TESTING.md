@@ -14,7 +14,7 @@ The PRs are stacked. Test the latest stack branch to exercise all modules withou
 
 ```bash
 git fetch origin
-git switch feat/comparison-review-viewer
+git switch docs/handover-audit
 ```
 
 If you already have uncommitted work, preserve it before switching. Review/merge order is documented in [REVIEW.md](REVIEW.md). Do not merge to run these tests.
@@ -110,7 +110,7 @@ Pull only if that model is not installed. It is the tested local smoke-test base
 5. Select one actual resume tab initially. Its Google Docs URL contains `tab=t...`; use that value for `resume_tab_ids`. Exclude cover-letter tabs. Add copied project Markdown sources later through `local_source_dirs` if needed.
 6. Set `tracker_tab` to `Assistant Applications`. The app creates this dedicated tab in the copied workbook; it does not populate the original workbook's custom Tracker tab.
 
-Configuration is already saved privately in `.assistant/workflow.sqlite3` in the development checkout for the supplied sandbox copies. `/sources` shows the current configuration. Do not overwrite that configuration just to follow an example.
+A fresh clone has no private state or copied Google resources. The existing development checkout may already contain configuration in `.assistant/workflow.sqlite3`; inspect `/sources` before changing it. Do not overwrite an existing setup just to follow an example.
 
 **PowerShell payload input:**
 
@@ -151,7 +151,7 @@ python -m assistant.cli /save_jd < examples/jd.sample.json
 | 5 | `/show_sources` | Catalogue IDs and source links are inspectable | None |
 | 5a | `/requirements APPLICATION_ID` | Every JD sentence/line candidate is listed; no model silently drops content | None |
 | 5b | `/review_requirements` with reviewed candidate IDs | Only selected scope is saved; for the synthetic sample select IDs 1, 2, 3 | None |
-| 6 | `/compare_resume APPLICATION_ID` | Every selected requirement has one match; citations, gaps and scope-limited counts appear | None |
+| 6 | `/compare_resume APPLICATION_ID` | Every selected requirement has one match; proposed citations/verdicts appear; accepted counts and resume selection remain unset | None |
 | 6a | `/show_comparison APPLICATION_ID` | Proposed statuses, flags, snapshot ID and incomplete review template | None |
 | 6b | `/review_comparison` with completed decisions for every requirement | Explicit selected resume; accepted counts are reviewer decisions; project sources reviewed separately | None |
 | 7 | `/draft_resume APPLICATION_ID` | Exactly one new draft tab; previous tabs and source resume remain intact | New tab in copied Doc |
@@ -160,7 +160,7 @@ python -m assistant.cli /save_jd < examples/jd.sample.json
 | 10 | Inspect the draft in Google Docs/PDF | Facts, headings, links, page count and spacing are acceptable | Manual review |
 | 11 | `/approve_resume APPLICATION_ID` | Your review of the current content/layout is recorded | None |
 | 12, optional | `/draft_cover_letter APPLICATION_ID` | Draft link and evidence list; review wording and layout manually | New Doc in sandbox |
-| 12a, if drafted | `/show_cover_letter`, then `/review_cover_letter` with current text hash and approve/omit decision | Unreviewed draft blocks tracking; changed approved text requires renewed review; omitted draft stays accessible | None |
+| 12a, if drafted | `/show_cover_letter APPLICATION_ID`, then `/review_cover_letter` with current text hash and approve/omit decision | Unreviewed draft blocks tracking; changed approved text requires renewed review; omitted draft stays accessible | None |
 | 13 | `/init_tracker` | Dedicated Assistant Applications tab; existing tabs/formulas unchanged | New tab in copied Sheet |
 | 14 | `/track_application APPLICATION_ID` | Proposed row appears; sheet has no new row yet | None |
 | 15 | `/track_application APPLICATION_ID --write` | One verified row with artifact links and Prepared status | Dedicated tracker tab |
@@ -178,7 +178,7 @@ For step 9, use only edit IDs you actually reviewed. Example payload:
 
 Paste the payload after `/apply_edits` in the UI, or save it privately and pipe it into `python -m assistant.cli /apply_edits` using the same stdin patterns above. If no suggestions are suitable, skip applying edits, review the copied resume, and approve that version.
 
-Create an optional cover letter before writing the tracker row so its link is included. If added later, the app does not silently update the existing row. The summary never means that an application was submitted.
+Create and explicitly approve an optional cover letter before writing the tracker row if its link should be included. Omit a rejected letter using its review template. If added later, the app does not silently update the existing row. The summary never means that an application was submitted.
 
 ### Formatting acceptance
 
@@ -215,6 +215,9 @@ Use sandbox copies only. Never deliberately test failures on original documents.
 | Output target outside sandbox | Write stops; original files remain unchanged |
 | Occupied/formula-containing reserved tracker row | Stops; existing values remain intact |
 | Network interruption with uncertain write result | Retry the identical command and input; reconcile before starting a different edit batch |
+| Missing/stale edit batch ID | Reject before a resume write |
+| Unreviewed comparison | Drafting, generation, approval and tracking stop |
+| Unreviewed generated letter or changed approved letter text | Tracking stops; review current text or explicitly omit |
 | Model returns invalid/truncated JSON or fabricated quote | Command fails; no proposed remote edit is applied |
 
 Offline tests simulate uncertain remote success; you do not need to interrupt your network to prove that case.
@@ -296,3 +299,8 @@ Outline: load an application → inspect each source/requirement → check surro
 6. Change the application ID: old evidence must disappear until that application's comparison is loaded. An unknown ID must display an error without retaining another application's evidence.
 
 The offline Streamlit tests exercise these behaviors and assert that inspection does not modify application records or invoke Google/model calls. They verify UI behavior, not factual accuracy or browser layout.
+
+
+## Handover acceptance
+
+Use [HANDOVER.md](HANDOVER.md) for state locations, configuration defaults, backup/restore boundaries and the maintainer map. Record a fresh recipient-run acceptance in [TEST_REPORT_TEMPLATE.md](TEST_REPORT_TEMPLATE.md). Earlier sandbox runs are evidence of those runs, not proof that a fresh installation, restored backup or different model works.
