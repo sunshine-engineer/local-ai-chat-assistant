@@ -13,7 +13,7 @@ Outline: coverage → corrected inconsistencies → verification → remaining r
 | [COMMANDS](COMMANDS.md) | All 25 registered commands, payload validators and write gates | Corrected letter-review/tracker order, merged configuration behavior and diagnostics; every command covered |
 | [TESTING](TESTING.md) | Test suite, CLI modes, example files, real-service opt-in flags | Corrected fresh-clone assumptions, provisional results, letter review and failure expectations; latest stack branch documented |
 | [VALIDATION](VALIDATION.md) | Implementation test reports, evaluation JSON and current controls | Current 73-test status comes first; 47/69-test and pre-gate outcomes explicitly historical; unresolved accuracy and unrun checks retained |
-| [REVIEW](REVIEW.md) | GitHub PR stack and branch bases | Ordered review/merge boundaries retained; documentation PR added after creation |
+| [REVIEW](REVIEW.md) | GitHub PR stack and branch bases | Ordered review/merge boundaries retained; documentation PR #13 added after creation |
 | [PLAN](PLAN.md) | Implemented modules and deferred scope | Scope retained; startup preserves existing `.env`; handover linked |
 | [EXTENDING](EXTENDING.md) | Handler registration, lock, review and evidence boundaries | New modules must also update handover configuration/recovery information |
 | [TEST_REPORT_TEMPLATE](TEST_REPORT_TEMPLATE.md) | Current acceptance/review gates | Added exact edit-batch, letter-hash, viewer, backup and recipient acceptance checks |
@@ -31,7 +31,7 @@ Outline: coverage → corrected inconsistencies → verification → remaining r
 
 ## Verification and limits
 
-The audit checks local Markdown file targets and heading anchors, covers every registry command, parses sample JSON, verifies the README sample against the actual sample JD and enumerates its requirement candidates. Environment/configuration tables were compared with the implementation. Fresh audit results: all 73 offline tests pass on host Python 3.14; all 25 registry commands are covered; the 10 Markdown documents have 70 valid local file/heading links at this audit point; sample JSON, README sample scope, evaluation fixture digests/counts and `git diff --check` pass. GitHub confirmed the open PR #1–#12 order/base chain and passing baseline checks. The documentation PR also requires passing CI on its final commit.
+The audit checks local Markdown file targets and heading anchors, covers every registry command, parses sample JSON, verifies the README sample against the actual sample JD and enumerates its requirement candidates. Environment/configuration tables were compared with the implementation. Fresh audit results: all 73 offline tests pass on host Python 3.14; all 25 registry commands are covered; the 10 Markdown documents have 72 valid local file/heading links; sample JSON, README sample scope, evaluation fixture digests/counts and `git diff --check` pass. GitHub confirmed the open PR #1–#12 order/base chain and passing baseline checks. The documentation PR also requires passing CI on its final commit.
 
 Compose validation could not be rerun: the WSL Docker executable returned an input/output error, and the standard Windows fallback executable was absent. This is an environment limitation, not a Compose pass. Earlier Compose acceptance is retained only as historical evidence; rerun `docker compose --env-file .env.example config --quiet` after repairing Docker Desktop integration. No container or private runtime configuration was changed by this audit.
 
