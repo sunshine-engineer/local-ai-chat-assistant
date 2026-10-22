@@ -22,7 +22,7 @@ def candidates(app):
         Validated requirement strings in their original order.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The JD produces zero or more than 200 sentence/line candidates.
     """
     result = quote_candidates(app["input"]["jd"])
     if not result or len(result) > 200:
@@ -35,13 +35,13 @@ def show(jobs, arguments):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Application ID returned by /save_jd.
 
     Returns:
         JSON candidate IDs, literal text and current review status.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The application or JD candidate scope is invalid.
     """
     app_id, app = jobs.application(arguments)
     return json.dumps(
@@ -63,13 +63,13 @@ def review(jobs, arguments):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: JSON object payload matching this command's fields in docs/COMMANDS.md.
 
     Returns:
         JSON selected literal requirements and the next comparison command.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Scope is frozen or the payload does not select 1–30 unique valid candidate IDs with explicit review.
     """
     data = json_input(arguments)
     if (
@@ -124,7 +124,7 @@ def selected(app):
         Validated requirement strings in their original order.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The JD has changed, review is absent, or selected quotations fail literal-scope checks.
     """
     review = app.get("requirements_review")
     if not review or review.get("jd_hash") != digest(app["input"]["jd"]):

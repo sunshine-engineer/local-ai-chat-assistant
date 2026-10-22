@@ -62,7 +62,7 @@ def verify_compact(tab):
         tab: Worksheet title or Google tab structure required by the helper.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The read-back margins, font size or paragraph spacing differs from the preset.
     """
 
     def points(value, expected):
@@ -107,13 +107,13 @@ def format_resume(jobs, arguments):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Application ID followed optionally by the explicit --write flag.
 
     Returns:
         JSON preset preview or confirmation and URL after verified formatting.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Arguments, draft readiness, ownership or preservation/readback checks fail.
     """
     parts = arguments.strip().split()
     if len(parts) not in (1, 2) or (len(parts) == 2 and parts[1] != "--write"):

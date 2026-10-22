@@ -28,7 +28,7 @@ def letter_text(jobs, app):
         Actual cover-letter document text.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: There is no valid draft URL or the document is not a single-tab letter.
     """
     match = re.search(r"/document/d/([A-Za-z0-9_-]+)", app.get("cover_letter_url", ""))
     if not match:
@@ -46,13 +46,13 @@ def show_letter(jobs, arguments):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Application ID returned by /save_jd.
 
     Returns:
         JSON draft text, current hash, link and incomplete review template.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The application or current letter structure is invalid.
     """
     app_id, app = jobs.application(arguments)
     text = letter_text(jobs, app)
@@ -79,13 +79,13 @@ def review_letter(jobs, arguments):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: JSON object payload matching this command's fields in docs/COMMANDS.md.
 
     Returns:
         Confirmation of approval or omission; an omitted draft remains preserved.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Required review fields are invalid or the current letter hash differs.
     """
     data = json_input(arguments)
     if (
@@ -130,7 +130,7 @@ def included_letter_url(jobs, app):
         Approved current letter URL, or an empty string when absent or omitted.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: A generated letter lacks current explicit approval and has not been omitted.
     """
     if not app.get("cover_letter_url"):
         return ""
@@ -151,14 +151,14 @@ def cover_letter(jobs, arguments, model=generate_json):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Application ID returned by /save_jd.
         model: Injectable structured-output model callable; defaults to the local provider.
 
     Returns:
         JSON draft URL, cited paragraph evidence and required-review guidance.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Evidence is unreviewed, paragraph shape/citations fail validation, or a generated numeric claim lacks accepted support.
     """
     app_id, app = jobs.application(arguments)
     if not app.get("source_snapshot"):
@@ -220,13 +220,13 @@ def summary(jobs, arguments):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Application ID returned by /save_jd.
 
     Returns:
         JSON artifact links, preparation status and unresolved manual steps.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The application is unknown or required current document structure is invalid.
     """
     app_id, app = jobs.application(arguments)
     missing = []

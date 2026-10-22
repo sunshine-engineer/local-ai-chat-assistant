@@ -23,7 +23,7 @@ def generate_json(instruction, data, *, schema=None):
         Decoded JSON object satisfying completion and optional schema checks.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The prompt exceeds its budget or the provider returns incomplete, truncated, non-object or schema-invalid output.
     """
     schema_text = json.dumps(schema) if schema else ""
     if len(schema_text) > 4000:

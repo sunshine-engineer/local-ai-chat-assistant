@@ -16,7 +16,7 @@ def model_status(arguments=""):
     """Report local-model connectivity without treating availability as model quality.
 
     Args:
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Unused argument string accepted for command-registry compatibility.
 
     Returns:
         Connectivity and installed-model diagnostic, including unavailable-service guidance.

@@ -40,7 +40,7 @@ class CommandRegistry:
             action: Registered Action or captured command handler to invoke.
 
         Raises:
-            ValueError: Input, ownership, review state or provider output fails this operation's validation.
+            ValueError: The command name is already registered.
         """
         if action.name in self.actions:
             raise ValueError(f"Duplicate command: {action.name}")
@@ -50,7 +50,7 @@ class CommandRegistry:
         """List the registered commands and their descriptions.
 
         Args:
-            arguments: Command argument string; JSON payload or application ID as required by this handler.
+            arguments: Unused argument string accepted for command-registry compatibility.
 
         Returns:
             Newline-separated command names and descriptions.

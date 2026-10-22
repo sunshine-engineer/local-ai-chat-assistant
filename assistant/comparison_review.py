@@ -120,13 +120,13 @@ def show(jobs, arguments):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Application ID returned by /save_jd.
 
     Returns:
         JSON containing the frozen comparison, full sources and incomplete review template.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The application is unknown or has no comparison.
     """
     app_id, app = jobs.application(arguments)
     if not app.get("comparison"):
@@ -168,7 +168,7 @@ def reviewed_sources(app):
         Selected reviewed resume plus eligible reviewed project records.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Review is missing, legacy, stale, or not bound to the selected source snapshot.
     """
     comparison = app.get("comparison", {})
     selected = comparison.get("recommended_source_id")
@@ -210,7 +210,7 @@ def generation_sources(app):
         Source records reduced to accepted non-gap quotations.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Review is stale or no accepted non-gap quotation is available.
     """
     result = []
     sources = reviewed_sources(app)
@@ -237,13 +237,13 @@ def review(jobs, arguments):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: JSON object payload matching this command's fields in docs/COMMANDS.md.
 
     Returns:
         JSON describing the recorded source decisions and explicitly selected resume.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The review payload, selected source, quotations, flag acknowledgements or snapshot binding is invalid, or drafting has frozen decisions.
     """
     data = json_input(arguments)
     if (

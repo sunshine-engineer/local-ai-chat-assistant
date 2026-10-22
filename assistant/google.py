@@ -37,7 +37,7 @@ def authenticate(root, client_file):
         Confirmation that credentials were saved privately.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The Desktop OAuth client file is missing or invalid.
     """
     from google_auth_oauthlib.flow import InstalledAppFlow
 
@@ -221,7 +221,7 @@ class Google:
             file_id: Drive file identifier to inspect or authorize.
 
         Raises:
-            ValueError: Input, ownership, review state or provider output fails this operation's validation.
+            ValueError: The sandbox is unset or the target is not directly inside it.
         """
         if not self.sandbox_folder_id:
             raise ValueError("Configure sandbox_folder_id before any Google write.")
@@ -327,7 +327,7 @@ class Google:
             Verified Google Docs URL.
 
         Raises:
-            ValueError: Input, ownership, review state or provider output fails this operation's validation.
+            ValueError: The destination, ownership, existing tabs or exact document readback differs from the expected artifact.
             GoogleError: Authorization, provider access or remote readback failed; retry may require reconciliation.
         """
         if not self.sandbox_folder_id or folder != self.sandbox_folder_id:

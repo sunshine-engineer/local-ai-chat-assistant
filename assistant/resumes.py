@@ -42,7 +42,7 @@ def find_tab(document, tab_id):
         Matching Google document tab structure.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The requested tab no longer exists.
     """
     for tab in tabs(document):
         if tab["tabProperties"]["tabId"] == tab_id:
@@ -78,7 +78,7 @@ def clone_requests(source, target_id):
         Pair of exact source text and destination-only API requests.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The source has empty text or unsupported lists, tables, suggestions, objects or document structures.
     """
     document_tab = source["documentTab"]
     for key in ("headers", "footers", "footnotes", "inlineObjects", "positionedObjects"):
@@ -181,13 +181,13 @@ def draft(jobs, arguments):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Application ID returned by /save_jd.
 
     Returns:
         Verified owned draft URL and manual-layout-review guidance.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Comparison review, source snapshot, supported structure or owned draft reconciliation/preservation fails.
     """
     app_id, app = jobs.application(arguments)
     if app.get("draft", {}).get("ready"):
@@ -269,7 +269,7 @@ def validate_edits(output, text, sources):
         Validated non-overlapping edit records with exact accepted source citations.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Edits exceed limits, lack exact accepted citations, overlap, change protected spans or introduce unsupported digit values.
     """
     edits = output.get("edits")
     if not isinstance(edits, list) or len(edits) > 20:
@@ -320,14 +320,14 @@ def suggest(jobs, arguments, model=generate_json):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Application ID returned by /save_jd.
         model: Injectable structured-output model callable; defaults to the local provider.
 
     Returns:
         JSON proposals, exact edit-batch ID and explicit-review guidance.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Accepted evidence or a completed draft is missing, edits are pending, or model proposals fail validation.
     """
     app_id, app = jobs.application(arguments)
     from assistant.comparison_review import generation_sources
@@ -427,13 +427,13 @@ def apply(jobs, arguments):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: JSON object payload matching this command's fields in docs/COMMANDS.md.
 
     Returns:
         Verified draft URL and renewed content/layout approval guidance.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Review, exact batch binding, selected IDs, cached facts or revision/readback reconciliation fails.
     """
     data = json_input(arguments)
     if data.get("reviewed") is not True:
@@ -514,13 +514,13 @@ def approve(jobs, arguments):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Application ID returned by /save_jd.
 
     Returns:
         Confirmation binding human review to the current draft text.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Review is missing or the draft is incomplete or has pending edits.
     """
     app_id, app = jobs.application(arguments)
     from assistant.comparison_review import reviewed_sources
@@ -542,13 +542,13 @@ def reset(jobs, arguments):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: JSON object payload matching this command's fields in docs/COMMANDS.md.
 
     Returns:
         Confirmation that the remote draft was preserved and local edit state cleared.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The caller has not confirmed keeping the current text or no completed draft exists.
     """
     data = json_input(arguments)
     if data.get("keep_current") is not True:

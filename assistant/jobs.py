@@ -24,7 +24,7 @@ def identifier(value):
         Validated resource ID string.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The value is not a resource-ID string or contains URL/path characters.
     """
     if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", value):
         raise ValueError("Use a Google resource ID, not a URL, in configuration.")
@@ -180,7 +180,7 @@ class Jobs:
                 """Run one handler while holding the local action lock.
 
                 Args:
-                    arguments: Command argument string; JSON payload or application ID as required by this handler.
+                    arguments: Application ID returned by /save_jd.
                     action: Registered Action or captured command handler to invoke.
 
                 Returns:
@@ -195,13 +195,13 @@ class Jobs:
         """Authorize Google only from the host Desktop CLI.
 
         Args:
-            arguments: Command argument string; JSON payload or application ID as required by this handler.
+            arguments: Host path to the Desktop OAuth client JSON file, outside the repository.
 
         Returns:
             Confirmation that OAuth credentials were saved privately.
 
         Raises:
-            ValueError: Input, ownership, review state or provider output fails this operation's validation.
+            ValueError: The command runs outside the CLI or its client-file input is invalid.
         """
         import os
 
@@ -215,13 +215,13 @@ class Jobs:
         """Validate and merge supported resource settings into private state.
 
         Args:
-            arguments: Command argument string; JSON payload or application ID as required by this handler.
+            arguments: JSON object payload matching this command's fields in docs/COMMANDS.md.
 
         Returns:
             Configuration-saved confirmation.
 
         Raises:
-            ValueError: Input, ownership, review state or provider output fails this operation's validation.
+            ValueError: Fields, identifier types, source lists or protected-original targets are invalid.
         """
         data = json_input(arguments)
         allowed = {
@@ -279,7 +279,7 @@ class Jobs:
         """Display saved resource configuration without modifying it.
 
         Args:
-            arguments: Command argument string; JSON payload or application ID as required by this handler.
+            arguments: Unused argument string accepted for command-registry compatibility.
 
         Returns:
             Pretty-printed JSON configuration.
@@ -296,7 +296,7 @@ class Jobs:
             The requested non-empty saved setting.
 
         Raises:
-            ValueError: Input, ownership, review state or provider output fails this operation's validation.
+            ValueError: The requested configuration field is empty or missing.
         """
         value = self.store.get("config", {}).get(key)
         if not value:
@@ -307,13 +307,13 @@ class Jobs:
         """Load a known application by its explicit string identifier.
 
         Args:
-            arguments: Command argument string; JSON payload or application ID as required by this handler.
+            arguments: Application ID returned by /save_jd.
 
         Returns:
             Pair of application ID and its saved workflow record.
 
         Raises:
-            ValueError: Input, ownership, review state or provider output fails this operation's validation.
+            ValueError: The identifier is not a string or no saved application exists.
         """
         if not isinstance(arguments, str):
             raise ValueError("Application ID must be a string.")
@@ -336,13 +336,13 @@ class Jobs:
         """Capture the exact JD into an idempotently keyed sandbox document.
 
         Args:
-            arguments: Command argument string; JSON payload or application ID as required by this handler.
+            arguments: JSON object payload matching this command's fields in docs/COMMANDS.md.
 
         Returns:
             Application ID and the verified JD document URL.
 
         Raises:
-            ValueError: Input, ownership, review state or provider output fails this operation's validation.
+            ValueError: Input fields, JD length, variant label, destination or remote artifact reconciliation is invalid.
         """
         data = json_input(arguments)
         allowed = {"jd", "company", "role", "url", "variant"}

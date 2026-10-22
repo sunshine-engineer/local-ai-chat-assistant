@@ -82,7 +82,7 @@ class Store:
             None while the exclusive local action lock is held.
 
         Raises:
-            ValueError: Input, ownership, review state or provider output fails this operation's validation.
+            ValueError: Another command holds the local action lock.
         """
         with closing(sqlite3.connect(self.root / "lock.sqlite3", timeout=1)) as db, db:
             try:
@@ -96,13 +96,13 @@ def json_input(arguments):
     """Parse one command JSON object and report a bounded validation error.
 
     Args:
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Application ID returned by /save_jd.
 
     Returns:
         Parsed JSON object.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The arguments are invalid JSON or do not decode to an object.
     """
     try:
         data = json.loads(arguments)

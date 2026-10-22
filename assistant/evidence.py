@@ -32,13 +32,13 @@ def refresh(jobs, arguments=""):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Unused argument string accepted for command-registry compatibility.
 
     Returns:
         JSON catalogue metadata and skipped-file diagnostics; full text stays private.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Required configuration is missing, no eligible resume exists, or catalogue limits are exceeded.
         OSError: A selected local reference file cannot be read.
         UnicodeError: A selected local reference is not valid UTF-8.
     """
@@ -136,13 +136,13 @@ def show(jobs, arguments=""):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Unused argument string accepted for command-registry compatibility.
 
     Returns:
         JSON catalogue metadata and skipped-file diagnostics.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: No source catalogue has been refreshed.
     """
     catalogue = jobs.store.get("catalogue")
     if not catalogue:
@@ -167,7 +167,7 @@ def validate_requirements(output, jd):
         Validated requirement strings in their original order.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: Requirements are empty, oversized or not literal JD substrings.
     """
     requirements = output.get("requirements")
     if not isinstance(requirements, list) or not requirements or len(requirements) > 30:
@@ -189,7 +189,7 @@ def validate_matches(output, requirements, source_text):
         Validated model matches in reviewed requirement order.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: A requirement is missing/duplicated, a verdict is invalid, or its quotation is inconsistent with the source.
     """
     matches = output.get("matches")
     if not isinstance(matches, list) or len(matches) != len(requirements):
@@ -232,7 +232,7 @@ def assess(requirements, source, kind, model):
         Validated model matches in reviewed requirement order.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The batch size or any generated match fails validation.
     """
     size = setting("ollama", "requirement_batch_size", "ASSISTANT_REQUIREMENT_BATCH_SIZE")
     if not 1 <= size <= 5:
@@ -264,14 +264,14 @@ def compare(jobs, arguments, model=generate_json):
 
     Args:
         jobs: Jobs coordinator providing workflow state and the Google adapter.
-        arguments: Command argument string; JSON payload or application ID as required by this handler.
+        arguments: Application ID returned by /save_jd.
         model: Injectable structured-output model callable; defaults to the local provider.
 
     Returns:
         JSON provisional matches, unset accepted counts and snapshot binding.
 
     Raises:
-        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        ValueError: The application/scope/catalogue is unavailable, drafting has frozen comparison, or a generated batch fails validation.
     """
     from assistant.comparison_review import proposals
 
