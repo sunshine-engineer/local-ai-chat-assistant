@@ -1,6 +1,13 @@
+<!--
+File: docs/HANDOVER.md
+Purpose: Handover runbook.
+Maintainer: sunshine-engineer
+Modified: 2026-10-23
+-->
+
 # Handover runbook
 
-Reviewed 2026-10-22 against the command registry, handlers, sample files, environment defaults and Compose configuration. This is a development handover for one local user; it is not a production-readiness sign-off.
+Reviewed 2026-10-23 against the command registry, handlers, sample files, environment defaults and Compose configuration. This is a development handover for one local user; it is not a production-readiness sign-off.
 
 Outline: obtain the full branch → start local services → connect and configure copies → prepare one application → verify/recover → back up and transfer ownership.
 
@@ -8,7 +15,7 @@ Outline: obtain the full branch → start local services → connect and configu
 
 | Area | Handover state | Next owner action |
 |---|---|---|
-| Manual text commands | Implemented; 73 offline tests passed at the last implementation review | Repeat [offline checks](TESTING.md#2-prepare-python-and-run-offline-checks) on your exact commit |
+| Manual text commands | Implemented; 73 established workflow tests plus configuration/entry-point regressions; see latest validation | Repeat [offline checks](TESTING.md#2-prepare-python-and-run-offline-checks) on your exact commit |
 | Google operations | App-owned OAuth and copied-resource acceptance previously exercised | Connect your account and verify sandbox IDs before writes |
 | Comparison and generation | Model suggestions require explicit evidence and artifact review | Inspect every factual claim; schema/citation checks do not prove support |
 | Read-only comparison panel | Proposal/decision inspection implemented | Reload after commands; approve through commands only |
@@ -48,7 +55,7 @@ For PowerShell setup and JSON input, use [TESTING.md](TESTING.md). `/status` is 
 
 Open `http://localhost:8501` after starting Streamlit or the full Compose app. Test readiness with `docker compose ps`, `docker compose logs --tail=50 chatbot`, and the health endpoint `http://localhost:8501/_stcore/health`. Do not publish raw logs containing private text.
 
-Compose uses fixed container names and loopback ports 8501, 5432 and the configurable Ollama host port. Existing services can conflict. Use a deliberate Compose override for names/ports rather than stopping unrelated containers. If changing `OLLAMA_PORT`, also change host `OLLAMA_HOST` to match; Compose's app endpoint stays the internal service address. The existing developer review runtime uses an isolated private override; it is not part of a fresh clone.
+Compose defaults to container names `ollama`, `qa-chatbot`, `postgres` and loopback ports 8501, 5432 and 11434. These names and host ports now have environment overrides. Existing services can conflict. Set the documented name/port environment overrides, or use a deliberate Compose override, rather than stopping unrelated containers. If changing `OLLAMA_PORT`, also change host `OLLAMA_HOST` to match; Compose's app endpoint stays the internal service address. The existing developer review runtime uses an isolated private override; it is not part of a fresh clone.
 
 ## 3. Configuration reference
 
@@ -67,11 +74,19 @@ Compose uses fixed container names and loopback ports 8501, 5432 and the configu
 | `OLLAMA_KEEP_ALIVE` | `1m` in Compose | Ollama model retention setting |
 | `ASSISTANT_EVIDENCE_DIR` | `./examples` in Compose | Existing host folder mounted read-only at `/evidence`; missing paths fail |
 | `ASSISTANT_HOME` | `.assistant` relative to working directory | Private workflow/token directory; keep CLI and UI on the same directory |
-| `DATABASE_URL` | `sqlite:///assistant.db` locally | Chat database; Compose overrides to its PostgreSQL service |
+| `DATABASE_URL` | `sqlite:///assistant.db` locally | Chat database; Compose clears this variable and uses its DB_* service fields |
 | `LANGSMITH_TRACING` | `false` in example | Tracing is opt-in; enabling external tracing can expose private prompt text |
-| `TZ` | `Asia/Kolkata` in example | Runtime timezone; tracker preparation dates explicitly use Asia/Kolkata |
+| `TZ` | `Asia/Kolkata` in example | Runtime timezone |
+| `TRACKER_TIMEZONE` | `Asia/Kolkata` | Preparation-date timezone for new tracker entries |
+| `GOOGLE_TIMEOUT_SECONDS` | `60` | Google REST timeout, including write/readback requests |
+| `CHAT_TEMPERATURE`, `CHAT_MAX_TOKENS` | `0.7`, `150` | Ordinary-chat slider starting values; valid UI ranges 0–1 and 50–300 |
+| `CHATBOT_PORT`, `POSTGRES_PORT` | `8501`, `5432` | Compose loopback host publication; internal ports remain fixed |
+| `OLLAMA_CONTAINER_NAME`, `CHATBOT_CONTAINER_NAME`, `POSTGRES_CONTAINER_NAME` | `ollama`, `qa-chatbot`, `postgres` | Optional Compose container-name overrides |
+| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | Public local-demo `chatbot` defaults | Compose database initialization and matching app connection fields; use a private password outside demos |
 
-`DB_HOST`, `DB_PORT` (5432), `DB_NAME`, `DB_USER` and `DB_PASSWORD` are fallback connection fields only when `DATABASE_URL` is absent; Compose supplies its own database settings. Example PostgreSQL credentials are local development defaults, not deployment credentials. Do not publish this app or expose its ports externally.
+`DB_HOST`, `DB_PORT` (5432), `DB_NAME`, `DB_USER` and `DB_PASSWORD` are fallback connection fields only when `DATABASE_URL` is absent or empty; Compose supplies its own database settings. Example PostgreSQL credentials are local development defaults, not deployment credentials. Do not publish this app or expose its ports externally.
+
+Defaults come from `config/defaults.toml`; private environment values take precedence. Real credentials belong only in private environment configuration, never in that public TOML file. The public demo values are retained for compatibility.
 
 The sidebar temperature/output sliders control ordinary chat. Structured actions use fixed temperature 0 and the environment budgets above. They do not inherit those sidebar sliders. `ASSISTANT_CLI` is set internally by the CLI; users need not configure it. Opt-in service test variables are documented in [TESTING.md](TESTING.md#6-optional-real-service-regression-tests).
 
@@ -131,6 +146,8 @@ The dedicated tracker headers are `Application ID`, `Company`, `Role`, `Job URL`
 | `.env` and private configuration/overrides | Local files outside committed examples | Preserve privately and update paths on a new machine |
 
 Before a workflow backup, finish/reconcile pending commands and stop the host app/CLI and Compose chatbot (`docker compose stop chatbot`) that share this state. Copy the stopped workflow directory to private protected storage. Back up local chat separately. Keep credentials and personal text out of Git and shared handover reports. For a credential-free transfer, omit the token and complete OAuth again on the target machine. Preserve the workflow database; deleting it loses ownership and retry checkpoints.
+
+Changing POSTGRES_* initialization values does not change users/passwords inside an existing PostgreSQL volume. Coordinate any credential migration with the existing database owner and backup first; do not delete volumes just to apply new settings. Compose passes discrete DB_* fields to SQLAlchemy so reserved password characters are encoded safely.
 
 For Compose PostgreSQL, use a database backup rather than copying a live Docker volume. This example creates a portable archive inside the database container; replace `PRIVATE_BACKUP_PATH` before copying it to private host storage:
 

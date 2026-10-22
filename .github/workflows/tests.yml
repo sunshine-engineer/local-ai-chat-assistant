@@ -1,3 +1,7 @@
+# File: .github/workflows/tests.yml
+# Purpose: Validate formatting, documentation, tests, deployment configuration and the runtime image.
+# Maintainer: sunshine-engineer
+# Modified: 2026-10-23
 name: Tests
 on: [push, pull_request]
 jobs:
@@ -7,6 +11,42 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-      - run: pip install -r requirements.txt
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - run: python -m ruff check .
+      - run: python -m ruff format --check .
+      - run: python scripts/check_consistency.py
       - run: python -m unittest discover -s tests -v
+      - name: Validate default Compose configuration
+        run: |
+          cp .env.example .env
+          docker compose --env-file .env.example config --quiet
+      - name: Validate non-default Compose settings
+        env:
+          POSTGRES_USER: synthetic-user
+          POSTGRES_PASSWORD: "synthetic:@/password"
+          POSTGRES_DB: synthetic-db
+          POSTGRES_PORT: "55432"
+          CHATBOT_PORT: "18501"
+          OLLAMA_PORT: "11439"
+          OLLAMA_CONTAINER_NAME: test-ollama
+          CHATBOT_CONTAINER_NAME: test-chatbot
+          POSTGRES_CONTAINER_NAME: test-postgres
+        run: |
+          docker compose --env-file .env.example config --format json > /tmp/compose.json
+          python - <<'PY'
+          import json
+          with open('/tmp/compose.json') as handle:
+              services = json.load(handle)['services']
+          assert services['chatbot']['environment']['DATABASE_URL'] == ''
+          assert services['chatbot']['environment']['DB_PASSWORD'] == 'synthetic:@/password'
+          assert services['chatbot']['environment']['DB_USER'] == services['postgres']['environment']['POSTGRES_USER']
+          assert services['postgres']['ports'][0]['published'] == "55432"
+          assert services['chatbot']['ports'][0]['published'] == "18501"
+          assert services['ollama']['container_name'] == 'test-ollama'
+          assert services['chatbot']['volumes'][1]['read_only'] is True
+          PY
+      - name: Build image and test without networking
+        run: |
+          docker build -t local-assistant:ci .
+          docker run --rm --network none local-assistant:ci python -m unittest discover -s tests -q

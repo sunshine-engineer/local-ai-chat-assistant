@@ -3,7 +3,9 @@
   "jd_folder_id": "REPLACE_WITH_SANDBOX_FOLDER_ID",
   "cover_letter_folder_id": "REPLACE_WITH_SANDBOX_FOLDER_ID",
   "resume_doc_id": "REPLACE_WITH_COPIED_RESUME_DOC_ID",
-  "resume_tab_ids": ["REPLACE_WITH_ONE_RESUME_TAB_ID"],
+  "resume_tab_ids": [
+    "REPLACE_WITH_ONE_RESUME_TAB_ID"
+  ],
   "tracker_id": "REPLACE_WITH_COPIED_TRACKER_ID",
   "tracker_tab": "Assistant Applications",
   "source_folder_ids": [],

@@ -1,163 +1,381 @@
-"""Google REST adapter. Does not import chat or application business logic."""
-import json
+"""Google REST adapter. Does not import chat or application business logic.
+
+File: assistant/google.py
+Maintainer: sunshine-engineer
+Modified: 2026-10-23
+"""
+
 from pathlib import Path
 from urllib.parse import quote
 
+from assistant.config import setting
+
 SCOPES = [
-    'https://www.googleapis.com/auth/drive.readonly',
-    'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/documents',
-    'https://www.googleapis.com/auth/spreadsheets',
+    "https://www.googleapis.com/auth/drive.readonly",
+    "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/documents",
+    "https://www.googleapis.com/auth/spreadsheets",
 ]
-DOC = 'application/vnd.google-apps.document'
-FOLDER = 'application/vnd.google-apps.folder'
+DOC = "application/vnd.google-apps.document"
+FOLDER = "application/vnd.google-apps.folder"
 
 
 class GoogleError(ValueError):
+    """Signal a sanitized Google authorization or transport failure."""
+
     pass
 
 
 def authenticate(root, client_file):
+    """Run Desktop OAuth consent and save credentials privately.
+
+    Args:
+        root: Private credential or workflow directory; None uses the configured default.
+        client_file: Path to a Desktop OAuth client JSON file outside the repository.
+
+    Returns:
+        Confirmation that credentials were saved privately.
+
+    Raises:
+        ValueError: Input, ownership, review state or provider output fails this operation's validation.
+    """
     from google_auth_oauthlib.flow import InstalledAppFlow
+
     path = Path(client_file).expanduser().resolve()
     if not path.is_file():
-        raise ValueError('OAuth Desktop client JSON file not found.')
+        raise ValueError("OAuth Desktop client JSON file not found.")
     flow = InstalledAppFlow.from_client_secrets_file(str(path), SCOPES)
     credentials = flow.run_local_server(port=0, open_browser=True)
     save_token(root, credentials)
-    return 'Google connected. Credentials saved privately on this machine.'
+    return "Google connected. Credentials saved privately on this machine."
 
 
 def save_token(root, credentials):
-    path = Path(root) / 'token.json'
+    """Write refreshed OAuth credentials with restrictive file permissions.
+
+    Args:
+        root: Private credential or workflow directory; None uses the configured default.
+        credentials: Google credentials supporting JSON serialization and refresh.
+    """
+    path = Path(root) / "token.json"
     # Open with restrictive permissions before writing a token.
     import os
+
     fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, 'w') as handle:
+    with os.fdopen(fd, "w") as handle:
         handle.write(credentials.to_json())
     path.chmod(0o600)
 
 
 def authorized_session(root):
-    from google.oauth2.credentials import Credentials
+    """Load or refresh credentials and create an authorized HTTP session.
+
+    Args:
+        root: Private credential or workflow directory; None uses the configured default.
+
+    Returns:
+        AuthorizedSession using current credentials.
+
+    Raises:
+        GoogleError: Authorization, provider access or remote readback failed; retry may require reconciliation.
+    """
     from google.auth.transport.requests import AuthorizedSession, Request
-    path = Path(root) / 'token.json'
+    from google.oauth2.credentials import Credentials
+
+    path = Path(root) / "token.json"
     if not path.exists():
-        raise GoogleError('Google is not connected. Run /google_connect in the terminal CLI.')
+        raise GoogleError("Google is not connected. Run /google_connect in the terminal CLI.")
     try:
         credentials = Credentials.from_authorized_user_file(str(path), SCOPES)
         if credentials.expired and credentials.refresh_token:
             credentials.refresh(Request())
             save_token(root, credentials)
         if not credentials.valid:
-            raise GoogleError('Google authorization expired. Reconnect using /google_connect.')
+            raise GoogleError("Google authorization expired. Reconnect using /google_connect.")
         return AuthorizedSession(credentials)
     except (OSError, ValueError) as exc:
-        raise GoogleError('Google credentials are invalid; reconnect.') from exc
+        raise GoogleError("Google credentials are invalid; reconnect.") from exc
 
 
 def tabs(document):
+    """Flatten top-level and child document tabs in document order.
+
+    Args:
+        document: Google document response containing nested tabs.
+
+    Returns:
+        Flattened document tab list in document order.
+    """
+
     def walk(items):
+        """Walk nested document tabs recursively.
+
+        Args:
+            items: Nested tab entries to traverse.
+
+        Yields:
+            Nested tab records.
+        """
         for tab in items:
             yield tab
-            yield from walk(tab.get('childTabs', []))
-    return list(walk(document.get('tabs', [])))
+            yield from walk(tab.get("childTabs", []))
+
+    return list(walk(document.get("tabs", [])))
 
 
 def body_text(body):
+    """Extract textual paragraph content, including nested table cells.
+
+    Args:
+        body: Google Docs body structure containing paragraphs or table cells.
+
+    Returns:
+        Concatenated paragraph and nested-table text.
+    """
     out = []
-    for item in body.get('content', []):
-        if 'paragraph' in item:
-            out.extend(e.get('textRun', {}).get('content', '') for e in item['paragraph'].get('elements', []))
-        if 'table' in item:
-            for row in item['table'].get('tableRows', []):
-                for cell in row.get('tableCells', []):
+    for item in body.get("content", []):
+        if "paragraph" in item:
+            out.extend(
+                e.get("textRun", {}).get("content", "")
+                for e in item["paragraph"].get("elements", [])
+            )
+        if "table" in item:
+            for row in item["table"].get("tableRows", []):
+                for cell in row.get("tableCells", []):
                     out.append(body_text(cell))
-    return ''.join(out)
+    return "".join(out)
 
 
 class Google:
+    """Provide bounded Google REST operations with sandbox and retry checks."""
+
     def __init__(self, root, session=None):
+        """Bind private credential storage and an optional injected HTTP session.
+
+        Args:
+            root: Private credential or workflow directory; None uses the configured default.
+            session: Optional injected authorized HTTP session for testing or integration.
+        """
         self.root, self._session = root, session
         self.sandbox_folder_id = None
 
     def call(self, method, url, **kwargs):
+        """Make a Google request and sanitize provider failures before reporting them.
+
+        Args:
+            method: HTTP request method.
+            url: Provider endpoint for the bounded operation.
+            kwargs: Additional provider or test-double keyword arguments.
+
+        Returns:
+            Decoded JSON response, or an empty dictionary for an empty response body.
+
+        Raises:
+            GoogleError: Authorization, provider access or remote readback failed; retry may require reconciliation.
+        """
         try:
             if self._session is None:
                 self._session = authorized_session(self.root)
-            response = self._session.request(method, url, timeout=60, **kwargs)
+            response = self._session.request(
+                method,
+                url,
+                timeout=setting("google", "timeout_seconds", "GOOGLE_TIMEOUT_SECONDS"),
+                **kwargs,
+            )
             if not response.ok:
                 # Surface only allowlisted diagnostics, never Google's raw response body.
                 try:
-                    details = response.json().get('error', {}).get('details', [])
-                    disabled = {item.get('metadata', {}).get('service') for item in details
-                                if item.get('reason') == 'SERVICE_DISABLED'}
+                    details = response.json().get("error", {}).get("details", [])
+                    disabled = {
+                        item.get("metadata", {}).get("service")
+                        for item in details
+                        if item.get("reason") == "SERVICE_DISABLED"
+                    }
                 except (ValueError, TypeError, AttributeError):
                     disabled = set()
-                for service in ('drive.googleapis.com', 'docs.googleapis.com', 'sheets.googleapis.com'):
+                for service in (
+                    "drive.googleapis.com",
+                    "docs.googleapis.com",
+                    "sheets.googleapis.com",
+                ):
                     if service in disabled:
-                        raise GoogleError(f'Google API disabled: {service}. Enable it in the OAuth client project, then retry the same command.')
-                raise GoogleError(f'Google request failed (HTTP {response.status_code}); check permissions and configuration. Writes may require reconciliation before retry.')
+                        raise GoogleError(
+                            f"Google API disabled: {service}. Enable it in the OAuth client project, then retry the same command."
+                        )
+                raise GoogleError(
+                    f"Google request failed (HTTP {response.status_code}); check permissions and configuration. Writes may require reconciliation before retry."
+                )
             return response.json() if response.content else {}
         except GoogleError:
             raise
         except Exception as exc:
             # Never surface HTTP bodies, tokens or credentials in chat.
-            raise GoogleError('Google connection failed; check network and authorization. A remote write may have completed; rerun the same command to reconcile.') from exc
+            raise GoogleError(
+                "Google connection failed; check network and authorization. A remote write may have completed; rerun the same command to reconcile."
+            ) from exc
 
     def check_write(self, file_id):
+        """Require a target file to reside directly inside the configured sandbox.
+
+        Args:
+            file_id: Drive file identifier to inspect or authorize.
+
+        Raises:
+            ValueError: Input, ownership, review state or provider output fails this operation's validation.
+        """
         if not self.sandbox_folder_id:
-            raise ValueError('Configure sandbox_folder_id before any Google write.')
-        if self.sandbox_folder_id not in self.metadata(file_id).get('parents', []):
-            raise ValueError('Writes are limited to copies directly inside the configured sandbox folder.')
+            raise ValueError("Configure sandbox_folder_id before any Google write.")
+        if self.sandbox_folder_id not in self.metadata(file_id).get("parents", []):
+            raise ValueError(
+                "Writes are limited to copies directly inside the configured sandbox folder."
+            )
 
     def metadata(self, file_id):
-        return self.call('GET', 'https://www.googleapis.com/drive/v3/files/' + quote(file_id, safe=''),
-                         params={'fields': 'id,name,mimeType,parents,trashed'})
+        """Read the minimum Drive metadata needed for ownership checks.
+
+        Args:
+            file_id: Drive file identifier to inspect or authorize.
+
+        Returns:
+            Drive metadata dictionary including parent folder IDs.
+
+        Raises:
+            GoogleError: Authorization, provider access or remote readback failed; retry may require reconciliation.
+        """
+        return self.call(
+            "GET",
+            "https://www.googleapis.com/drive/v3/files/" + quote(file_id, safe=""),
+            params={"fields": "id,name,mimeType,parents,trashed"},
+        )
 
     def document(self, doc_id):
-        return self.call('GET', 'https://docs.googleapis.com/v1/documents/' + quote(doc_id, safe=''),
-                         params={'includeTabsContent': 'true'})
+        """Fetch a Google document including every tab body.
+
+        Args:
+            doc_id: Google document identifier.
+
+        Returns:
+            Google Docs response with tab content.
+
+        Raises:
+            GoogleError: Authorization, provider access or remote readback failed; retry may require reconciliation.
+        """
+        return self.call(
+            "GET",
+            "https://docs.googleapis.com/v1/documents/" + quote(doc_id, safe=""),
+            params={"includeTabsContent": "true"},
+        )
 
     def batch(self, doc_id, requests, revision):
+        """Apply revision-guarded requests to an authorized sandbox document.
+
+        Args:
+            doc_id: Google document identifier.
+            requests: Ordered Google Docs API update requests.
+            revision: Required Google document revision identifier.
+
+        Returns:
+            Google Docs batch-update response.
+
+        Raises:
+            GoogleError: Authorization, provider access or remote readback failed; retry may require reconciliation.
+        """
         self.check_write(doc_id)
-        return self.call('POST', 'https://docs.googleapis.com/v1/documents/' + quote(doc_id, safe='') + ':batchUpdate',
-                         json={'requests': requests, 'writeControl': {'requiredRevisionId': revision}})
+        return self.call(
+            "POST",
+            "https://docs.googleapis.com/v1/documents/" + quote(doc_id, safe="") + ":batchUpdate",
+            json={"requests": requests, "writeControl": {"requiredRevisionId": revision}},
+        )
 
     def files(self, query):
+        """Read all Drive file-list pages matching the supplied query.
+
+        Args:
+            query: Drive file query expression.
+
+        Returns:
+            Combined list of matching Drive file metadata records.
+
+        Raises:
+            GoogleError: Authorization, provider access or remote readback failed; retry may require reconciliation.
+        """
         result, page = [], None
         while True:
-            params = {'q': query, 'fields': 'nextPageToken,files(id,name,mimeType,parents)', 'pageSize': 100}
+            params = {
+                "q": query,
+                "fields": "nextPageToken,files(id,name,mimeType,parents)",
+                "pageSize": 100,
+            }
             if page:
-                params['pageToken'] = page
-            response = self.call('GET', 'https://www.googleapis.com/drive/v3/files', params=params)
-            result.extend(response.get('files', []))
-            page = response.get('nextPageToken')
+                params["pageToken"] = page
+            response = self.call("GET", "https://www.googleapis.com/drive/v3/files", params=params)
+            result.extend(response.get("files", []))
+            page = response.get("nextPageToken")
             if not page:
                 return result
 
     def create_document(self, folder, title, key, text):
+        """Create or reconcile an application-owned document and verify its text.
+
+        Args:
+            folder: Destination sandbox folder identifier.
+            title: Human-readable document, tab or chat title.
+            key: Stable record, schema-field or remote reconciliation key.
+            text: Text to inspect or transform without changing the original value.
+
+        Returns:
+            Verified Google Docs URL.
+
+        Raises:
+            ValueError: Input, ownership, review state or provider output fails this operation's validation.
+            GoogleError: Authorization, provider access or remote readback failed; retry may require reconciliation.
+        """
         if not self.sandbox_folder_id or folder != self.sandbox_folder_id:
-            raise ValueError('Document output must be the configured sandbox folder.')
-        if self.metadata(folder).get('mimeType') != FOLDER:
-            raise ValueError('Output destination must be a Google Drive folder.')
-        matches = self.files(f"'{folder}' in parents and trashed=false and appProperties has {{ key='assistant_key' and value='{key}' }}")
+            raise ValueError("Document output must be the configured sandbox folder.")
+        if self.metadata(folder).get("mimeType") != FOLDER:
+            raise ValueError("Output destination must be a Google Drive folder.")
+        matches = self.files(
+            f"'{folder}' in parents and trashed=false and appProperties has {{ key='assistant_key' and value='{key}' }}"
+        )
         if len(matches) > 1:
-            raise ValueError('Duplicate remote documents detected; reconcile them manually.')
-        file = matches[0] if matches else self.call('POST', 'https://www.googleapis.com/drive/v3/files',
-            params={'fields': 'id'}, json={'name': title, 'mimeType': DOC, 'parents': [folder],
-                                          'appProperties': {'assistant_key': key}})
-        doc = self.document(file['id'])
+            raise ValueError("Duplicate remote documents detected; reconcile them manually.")
+        file = (
+            matches[0]
+            if matches
+            else self.call(
+                "POST",
+                "https://www.googleapis.com/drive/v3/files",
+                params={"fields": "id"},
+                json={
+                    "name": title,
+                    "mimeType": DOC,
+                    "parents": [folder],
+                    "appProperties": {"assistant_key": key},
+                },
+            )
+        )
+        doc = self.document(file["id"])
         all_tabs = tabs(doc)
         if len(all_tabs) != 1:
-            raise ValueError('Generated document has unexpected tabs; review manually.')
+            raise ValueError("Generated document has unexpected tabs; review manually.")
         tab = all_tabs[0]
-        actual = body_text(tab['documentTab']['body'])
+        actual = body_text(tab["documentTab"]["body"])
         if not actual.strip():
-            self.batch(file['id'], [{'insertText': {'location': {'index': 1, 'tabId': tab['tabProperties']['tabId']}, 'text': text}}], doc['revisionId'])
-        elif actual.rstrip('\n') != text.rstrip('\n'):
-            raise ValueError('Generated document was edited externally; refusing to overwrite it.')
-        check = self.document(file['id'])
-        if body_text(tabs(check)[0]['documentTab']['body']).rstrip('\n') != text.rstrip('\n'):
-            raise ValueError('Google Doc content readback did not match.')
-        return 'https://docs.google.com/document/d/' + file['id'] + '/edit'
+            self.batch(
+                file["id"],
+                [
+                    {
+                        "insertText": {
+                            "location": {"index": 1, "tabId": tab["tabProperties"]["tabId"]},
+                            "text": text,
+                        }
+                    }
+                ],
+                doc["revisionId"],
+            )
+        elif actual.rstrip("\n") != text.rstrip("\n"):
+            raise ValueError("Generated document was edited externally; refusing to overwrite it.")
+        check = self.document(file["id"])
+        if body_text(tabs(check)[0]["documentTab"]["body"]).rstrip("\n") != text.rstrip("\n"):
+            raise ValueError("Google Doc content readback did not match.")
+        return "https://docs.google.com/document/d/" + file["id"] + "/edit"

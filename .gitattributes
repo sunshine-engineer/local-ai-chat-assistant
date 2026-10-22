@@ -1,0 +1,6 @@
+# File: .gitattributes
+# Purpose: Preserve LF text conventions and treat screenshots as binary assets.
+# Maintainer: sunshine-engineer
+# Modified: 2026-10-23
+* text=auto eol=lf
+*.png binary

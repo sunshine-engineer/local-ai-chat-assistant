@@ -1,3 +1,10 @@
+<!--
+File: docs/PLAN.md
+Purpose: Command-first job application assistant.
+Maintainer: sunshine-engineer
+Modified: 2026-10-23
+-->
+
 # Command-first job application assistant
 
 Goal: turn a pasted JD into an evidence-based application package through explicit commands.

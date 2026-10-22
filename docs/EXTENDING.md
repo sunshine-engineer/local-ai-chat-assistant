@@ -1,6 +1,15 @@
+<!--
+File: docs/EXTENDING.md
+Purpose: Adding a command or module.
+Maintainer: sunshine-engineer
+Modified: 2026-10-23
+-->
+
 # Adding a command or module
 
 Outline: define the boundary → implement a handler → register the command → test offline → validate against sandbox resources → document the result.
+
+Follow [CONVENTIONS.md](CONVENTIONS.md) for headers, docstrings, runtime defaults and the required validation commands. New adjustable settings belong in `config/defaults.toml` and must have documented environment overrides; preserve legitimate safety/protocol constants.
 
 ## 1. Define one action
 

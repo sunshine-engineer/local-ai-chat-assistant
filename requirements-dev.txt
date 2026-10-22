@@ -1,0 +1,6 @@
+# File: requirements-dev.txt
+# Purpose: Runtime dependencies plus the pinned repository validation tool.
+# Maintainer: sunshine-engineer
+# Modified: 2026-10-23
+-r requirements.txt
+ruff==0.17.2

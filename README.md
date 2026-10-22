@@ -1,6 +1,42 @@
+<!--
+File: README.md
+Purpose: Local AI Job Application Assistant.
+Maintainer: sunshine-engineer
+Modified: 2026-10-23
+-->
+
 # Local AI Job Application Assistant
 
 A single-user, command-first assistant built with Python, Streamlit, Ollama and Google Workspace APIs. It prepares job-application material; you review and submit applications yourself.
+
+## Directory structure
+
+```text
+.
+├── assistant/          # Bounded commands, adapters, review policies and workflow state
+├── config/             # Public typed runtime defaults; environment overrides take precedence
+├── postgres/           # Chat models, SQLAlchemy configuration and initialization entry point
+├── tests/              # Offline regression suite with isolated provider doubles
+│   └── live/           # Explicit opt-in checks against disposable local services
+├── scripts/            # Repository maintenance and documentation consistency checks
+├── docs/               # Commands, testing, review, maintenance and handover guides
+│   └── evaluations/    # Sanitized historical model diagnostics with explicit limitations
+├── examples/           # Synthetic JD and placeholder resource configuration JSON
+├── assets/             # Historical screenshots and their provenance/limitations sidecar
+├── .github/workflows/  # Lint, format, documentation, test, Compose and Docker CI checks
+├── .streamlit/         # Streamlit visual theme
+├── app.py              # Streamlit entry point; ordinary chat never invokes tools
+├── helpers.py          # Shared chat persistence facade used by the UI and service checks
+├── Dockerfile          # Python runtime image; includes the packaged config defaults
+├── docker-compose.yml  # Local Ollama, PostgreSQL and application service topology
+├── pyproject.toml      # Shared Ruff formatting, import and docstring rules
+├── .editorconfig       # UTF-8, LF and per-file-type editor conventions
+├── .env.example        # Public override example; copy privately to .env
+├── requirements.txt    # Runtime dependencies
+└── requirements-dev.txt # Runtime dependencies plus pinned validation tooling
+```
+
+Ignored `.assistant/` contains credentials and workflow records; chat history is separate in `assistant.db` or the selected SQLAlchemy database. `.venv/` and Docker volumes are generated runtime assets. None belong in committed source directories. Existing files match the directory purposes above; the chat facade remains at its established import path for compatibility. See [the file inventory](docs/FILE_INVENTORY.md) for type-specific metadata and [maintenance conventions](docs/CONVENTIONS.md) for checks.
 
 ## Current capabilities
 
@@ -73,6 +109,8 @@ The candidate IDs above apply only to the synthetic sample JD. For your own JD, 
 
 Cover letters are optional. `/track_application` previews; adding `--write` saves. Use the application ID returned by `/save_jd`. CLI commands also accept JSON on stdin: `python -m assistant.cli /save_jd < jd.json`.
 
+Runtime defaults live in [config/defaults.toml](config/defaults.toml). Environment overrides remain dynamic; [HANDOVER.md](docs/HANDOVER.md#environment) lists them. Fixed Google API endpoints, OAuth scopes, review limits, ownership rules and the compact-format preset remain protocol or safety constants, rather than user-adjustable model instructions.
+
 ## Architecture and extension
 
 Streamlit/CLI → command registry → application handlers → Google/model adapters.
@@ -83,6 +121,8 @@ The initial copier supports paragraph/text resumes with page and named styles. C
 
 ## Documentation
 
+- [Formatting, metadata and contributor conventions](docs/CONVENTIONS.md)
+- [Reviewed file inventory](docs/FILE_INVENTORY.md)
 - [Handover runbook: configuration, operation, backup and ownership](docs/HANDOVER.md)
 - [Documentation audit and remaining handover checks](docs/DOCUMENTATION_AUDIT.md)
 - [Setup and exact command payloads](docs/COMMANDS.md)
@@ -96,6 +136,10 @@ The initial copier supports paragraph/text resumes with page and named styles. C
 ## Validation
 
 ```bash
+python -m pip install -r requirements-dev.txt
+python -m ruff check .
+python -m ruff format --check .
+python scripts/check_consistency.py
 python -m unittest discover -s tests -v
 ```
 

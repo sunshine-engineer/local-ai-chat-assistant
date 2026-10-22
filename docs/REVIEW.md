@@ -1,3 +1,10 @@
+<!--
+File: docs/REVIEW.md
+Purpose: Review and merge guide.
+Maintainer: sunshine-engineer
+Modified: 2026-10-23
+-->
+
 # Review and merge guide
 
 The implementation is split into stacked PRs. Nothing is merged automatically.
