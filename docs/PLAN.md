@@ -15,6 +15,8 @@ Each module is reviewed in a separate stacked PR. Later branches target the prec
 
 Deferred: voice, automated chains, recruiter messaging, scraping, autonomous agents, arbitrary Google edits. Adding an action requires a registry entry and tested handler. MCP adapters should remain separate from domain logic; Google APIs provide the initial concrete adapter.
 
+For operation and transfer of ownership, use the [handover runbook](HANDOVER.md). This plan describes scope; it does not certify model accuracy or production readiness.
+
 ## Local start
 
 Python 3.12+ recommended:
@@ -23,7 +25,7 @@ Python 3.12+ recommended:
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
+if [ ! -f .env ]; then cp .env.example .env; fi
 docker compose up -d ollama
 docker compose exec ollama ollama pull qwen3:1.7b
 python -m assistant.cli /status

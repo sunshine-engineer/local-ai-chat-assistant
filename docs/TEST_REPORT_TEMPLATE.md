@@ -8,7 +8,9 @@ Copy this template into a private note. Publish only sanitized results; omit tok
 - Branch and commit (`git rev-parse HEAD`):
 - OS, Python version, RAM/GPU:
 - Local or Docker execution:
-- Ollama model and context settings:
+- Ollama model/tag, context, output budget, timeout and requirement batch size:
+- Dependency versions / Docker image identity:
+- Workflow home and chat database type (no secrets):
 - Google resource targets confirmed as sandbox copies: yes / no
 
 ## Results
@@ -24,15 +26,23 @@ Use PASS / FAIL / NOT RUN with a brief observed result.
 | App-owned OAuth and refresh | | |
 | JD creation and repeat command | | |
 | Source catalogue and excluded files | | |
+| Complete JD scope review and invalidation | | |
+| Comparison proposals versus reviewed decisions; no automatic selection | | |
 | Comparison quality and source quotations | | |
+| Read-only viewer: reload, source/requirement navigation, unchanged state | | |
+| Unreviewed comparison blocks downstream actions | | |
 | Draft copy and unchanged reference tabs | | |
-| Reviewed edits and retry | | |
+| Reviewed edits, exact batch ID, stale-batch rejection and retry | | |
+| Identity/contact and numerical-claim checks | | |
 | External-edit conflict/reset | | |
 | Manual resume/PDF layout | | |
-| Cover letter, if requested | | |
+| Cover letter approve/omit, changed-hash rejection and excluded draft | | |
 | Tracker preview/write/retry | | |
 | Final summary | | |
 | Originals unchanged | | |
+| Fresh empty-volume Compose installation, if exercised | | |
+| Private backup and isolated restore rehearsal | | |
+| Recipient acceptance and documented remaining limitations | | |
 
 ## Timing and quality
 

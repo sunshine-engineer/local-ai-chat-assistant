@@ -1,8 +1,18 @@
 # Validation status
 
-Development snapshot: 2026-10-21. Results below separate real services from test doubles.
+Latest implementation validation: 2026-10-22, source commit `4490c33` (PR #12). Documentation audit follows in a separate PR. Results distinguish current regression checks from historical real-service experiments.
 
-## Confirmed
+## Current status
+
+- 73 offline tests passed on host Python 3.14, in the repository-built Python 3.12 image with networking disabled, and in GitHub Actions at the implementation commit.
+- The read-only viewer passed full-app Streamlit AppTest against saved sandbox state without Google/model calls or application-record changes.
+- App-owned Google acceptance previously exercised the controlled command flow against copies, including explicit omission of an unsupported generated letter.
+- Semantic quality remains unresolved: Qwen3:1.7b passed 2/8 synthetic diagnostics. Human review is mandatory; automation is deferred.
+- Fresh-empty-volume Compose startup, restore rehearsal and recipient acceptance have not been established by these results. Dependencies remain unpinned.
+
+See [HANDOVER.md](HANDOVER.md) for operator responsibilities and [DOCUMENTATION_AUDIT.md](DOCUMENTATION_AUDIT.md) for documentation coverage. The sections below retain dated development evidence; older counts and pre-gate workflows describe earlier revisions, not the current acceptance contract.
+
+## Historical baseline — before comparison controls
 
 | Layer | Evidence | Limit |
 |---|---|---|
@@ -18,9 +28,9 @@ Live testing found and fixed a missing chat import, empty JSON output, paraphras
 
 CPU measurements on one test run: copied-resume comparison approximately 73 seconds, suggestions 122 seconds, and a successful letter retry 140 seconds. Some calls overlapped; these are observations, not benchmarks. Timeout defaults to 300 seconds and remains configurable. Qwen3:1.7b is a smoke-test baseline, not a model-quality recommendation.
 
-## Acceptance result and remaining limits
+## Historical acceptance result and remaining limits
 
-- Full app-owned Google command sequence passes: JD save/retry, source refresh, comparison, resume draft/retry, suggestions, controlled reviewed edit/retry, local reset, approval, cover-letter save/reconciliation, tracker initialization/retry, row preview/write/retry, and final Prepared summary. The controlled edit is an explicit sandbox marker, not a model-generated recommendation. The first cover-letter save hit a network timeout; retry reconciled successfully. Existing resume tabs were checked for preservation during writes; all 38 tabs present before the final letter/tracker phase remained unchanged afterward.
+- At the earlier pre-control revision, the full app-owned Google command sequence passed: JD save/retry, source refresh, comparison, resume draft/retry, suggestions, controlled reviewed edit/retry, local reset, approval, cover-letter save/reconciliation, tracker initialization/retry, row preview/write/retry, and final Prepared summary. The controlled edit is an explicit sandbox marker, not a model-generated recommendation. The first cover-letter save hit a network timeout; retry reconciled successfully. Existing resume tabs were checked for preservation during writes; all 38 tabs present before the final letter/tracker phase remained unchanged afterward.
 - Clean Docker build now passes. Earlier attempts failed on a network timeout and a package-integrity mismatch; a later retry succeeded with hash verification unchanged. Valid cached downloads were reused. Runtime checks no longer depend solely on the reused dependency image.
 - The copied template initially rendered across three pages, with education spilling onto page three. The new `/format_resume` preview/write command was exercised through app OAuth, including repeated writes. Exact text and all 37 other tabs were preserved, requested styles read back correctly, and approval was invalidated. A selected-tab PDF export then rendered as two readable pages; both were visually inspected and contained the validation marker. This sample passes page-fit inspection, but other inputs may need shortening. Approval and existing tracker reconciliation passed afterward without adding a row. No automatic page-count guarantee is provided.
 
@@ -60,7 +70,7 @@ A focused real-service check against the selected Document QA case study passed 
 
 ## Enforced review controls
 
-The current regression suite contains 69 passing tests on host Python 3.14 and in the repository-built Python 3.12 image with networking disabled. Comparison output remains provisional: no accepted counts or selected resume exist until explicit, snapshot-bound reviewer decisions cover every selected requirement. Only accepted supporting quotations reach generation. Identity/contact protection, numerical-claim checks and exact edit-batch IDs reject specific unsafe edits; these are narrow controls, not semantic proof. Legacy comparisons cannot authorize new generation, approval or tracking.
+At the PR #11 revision, the regression suite contained 69 passing tests on host Python 3.14 and in the repository-built Python 3.12 image with networking disabled. Comparison output remains provisional: no accepted counts or selected resume exist until explicit, snapshot-bound reviewer decisions cover every selected requirement. Only accepted supporting quotations reach generation. Identity/contact protection, numerical-claim checks and exact edit-batch IDs reject specific unsafe edits; these are narrow controls, not semantic proof. Legacy comparisons cannot authorize new generation, approval or tracking.
 
 The read-only diagnostic reports in [evaluations](evaluations/) retain all eight synthetic known-failure cases. Qwen3:1.7b passed 2/8; one response was invalid. Qwen3:4b produced no valid outputs in that run, with model-worker startup failures, so its report cannot measure semantic accuracy. These fixtures expose regressions rather than establish representative job-matching quality. Automation remains deferred.
 

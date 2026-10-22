@@ -1,5 +1,7 @@
 # Manual commands
 
+Outline: connect Google → configure sandbox copies → save JD → review scope/evidence → draft and review artifacts → track and inspect the summary.
+
 This is a single-user local app. Use `streamlit run app.py` or the terminal CLI. Commands execute only their named action. Use `/help` for available commands. JSON payloads can span multiple lines.
 
 ## Google setup
@@ -21,6 +23,8 @@ Resource IDs are the ID portions of Google URLs. Source folders are read only. O
 /configure {"sandbox_folder_id":"SANDBOX_FOLDER_ID","source_folder_ids":["SOURCE_FOLDER_ID"],"local_source_dirs":["/absolute/project/docs"],"jd_folder_id":"SANDBOX_FOLDER_ID","resume_doc_id":"RESUME_DOC_ID","cover_letter_folder_id":"SANDBOX_FOLDER_ID","tracker_id":"SPREADSHEET_ID","tracker_tab":"Assistant Applications"}
 /sources
 ```
+
+Use [config.sample.json](../examples/config.sample.json) as the complete starting shape. `/configure` merges fields with existing settings; omitted keys are retained. Use empty arrays to clear source lists. Include `resume_tab_ids` to select actual resume tabs. A new clone contains no private configuration or OAuth token.
 
 Configure only what the current module needs. The tracker module creates a dedicated Assistant Applications tab with an Application ID column for reliable retries; it preserves your existing sheets.
 
@@ -54,7 +58,7 @@ Set `resume_tab_ids` to the tab IDs you want compared. Otherwise non-empty tabs 
 
 ## Sandbox-only writes
 
-All Google writes require `sandbox_folder_id`. Output folders must equal that folder. Resume and tracker writes additionally verify the target file is directly inside it. Use copies of your documents and workbook; keep originals outside this folder. Set a private `protected_original_ids` list in workflow state to additionally prevent original IDs being configured as write targets. OAuth grants themselves are not folder-restricted.
+All Google writes require `sandbox_folder_id`. Output folders must equal that folder. Resume and tracker writes additionally verify the target file is directly inside it. Use copies of your documents and workbook; keep originals outside this folder. An optional private `protected_original_ids` state record additionally blocks listed original IDs as write targets; it is not a `/configure` field. Keep originals outside the sandbox regardless. OAuth grants themselves are not folder-restricted.
 
 Your existing tracker can stay unchanged inside its copy. The tracking module will create a dedicated `Assistant Applications` tab in the copied workbook, with stable headers for application IDs, artifact links and status. Existing Tracker, dashboard, formulas and other tabs are preserved.
 
@@ -74,18 +78,20 @@ Suggestions cite exact source excerpts but their factual meaning is not mechanic
 ## Tracking and package summary
 
 ```text
+/draft_cover_letter APPLICATION_ID
+/show_cover_letter APPLICATION_ID
+# If a letter was drafted, submit its completed approve/omit review template first.
 /init_tracker
 /track_application APPLICATION_ID
 /track_application APPLICATION_ID --write
-/draft_cover_letter APPLICATION_ID
 /application_summary APPLICATION_ID
 ```
 
 `/init_tracker` creates only the dedicated `Assistant Applications` tab in the copied workbook. The original tracker layout contains custom scoring columns; this first version preserves them and uses a dedicated tab instead of forcing a new schema onto existing data. Configure `tracker_tab` as `Assistant Applications`. Custom tracker-column mappings are deferred; this version uses the documented fixed headers.
 
-Tracking first previews the proposed row. `--write` saves only after current resume approval. Dates use Asia/Kolkata. Status is Prepared, never Applied. The command checks duplicate application IDs and job URLs, refuses occupied/formula-containing reserved rows, writes RAW text and reads back the exact row. Capacity is 999 entries. Local state locking prevents two app commands from writing simultaneously; Sheets has no cell compare-and-swap here, so avoid manually editing the dedicated tab during a write. Existing tabs and formulas receive no update requests.
+Tracking first previews the proposed row. `--write` saves only after comparison review, current resume approval and approval/omission of any generated letter. Dates use Asia/Kolkata. Status is Prepared, never Applied. The command checks duplicate application IDs and job URLs, refuses occupied/formula-containing reserved rows, writes RAW text and reads back the exact row. Capacity is 999 entries. Local state locking prevents two app commands from writing simultaneously; Sheets has no cell compare-and-swap here, so avoid manually editing the dedicated tab during a write. Existing tabs and formulas receive no update requests.
 
-Cover letters are optional drafts with evidence references returned separately. Review every statement; citation existence does not prove semantic support. Creating a letter after tracking does not silently change the existing tracker row; update it manually in the sandbox if needed. Application summaries list missing steps and never claim a submitted application. Voice, automated chains, broad Google actions and multiple agents remain deferred.
+Cover letters are optional; skip both draft/show commands when no letter is needed. If drafted, [review or omit it](#review-optional-cover-letters-before-inclusion) before tracking. Evidence references are returned separately. Review every statement; citation existence does not prove semantic support. Creating a letter after tracking does not silently change the existing tracker row; update it manually in the sandbox if needed. Application summaries list missing steps and never claim a submitted application. Voice, automated chains, broad Google actions and multiple agents remain deferred.
 
 
 ## Recover from a conflicting external edit
@@ -199,3 +205,10 @@ Tailoring also protects detected name/contact lines and rejects new digit-based 
 ```
 
 Use `"decision":"omit"` to preserve the draft but exclude it from the package and tracker. An unreviewed draft blocks tracking and keeps the summary incomplete. Approval binds to the current document text; later changes require renewed review. Existing tracker rows are never silently rewritten when an inclusion decision changes: reconcile the exact conflicting row manually. Valid citations alone do not prove implementation, production experience, performance or impact.
+
+
+## Diagnostics and command inventory
+
+`/help` lists the live registry. `/status` checks model connectivity and installed models; it reports unavailable service in its message even when CLI exit code is 0. A reachable service does not establish model quality. Ordinary text remains chat and cannot execute application actions.
+
+For every environment default, accepted configuration key, state location, backup boundary and handover acceptance check, use [HANDOVER.md](HANDOVER.md).

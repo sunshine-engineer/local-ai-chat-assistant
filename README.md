@@ -27,14 +27,14 @@ Python 3.12+ and Docker are used below; Ollama runs in a container.
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
+if [ ! -f .env ]; then cp .env.example .env; fi
 docker compose up -d ollama
 docker compose exec ollama ollama pull qwen3:1.7b
 python -m assistant.cli /status
 streamlit run app.py
 ```
 
-On Windows use `.venv\Scripts\activate` for activation. Local chat history defaults to SQLite. No paid model API or LangSmith key is required. The default model is qwen3:1.7b, exercised locally against synthetic data and a copied resume. This is a limited smoke test, not a quality benchmark; review generated claims and evaluate your own hardware.
+On Windows PowerShell use `.venv\Scripts\Activate.ps1` or the explicit interpreter commands in [TESTING.md](docs/TESTING.md). Local chat history defaults to SQLite. No paid model API or LangSmith key is required. The default model is qwen3:1.7b, exercised locally against synthetic data and a copied resume. This is a limited smoke test, not a quality benchmark; review generated claims and evaluate your own hardware.
 
 For Docker reference files, set `ASSISTANT_EVIDENCE_DIR` in private `.env`; the app sees that folder read-only at `/evidence`. Configure a relevant subfolder in `local_source_dirs` and refresh sources inside the container. See [project evidence setup](docs/COMMANDS.md#local-project-evidence-in-docker).
 
@@ -47,7 +47,7 @@ See [command guide](docs/COMMANDS.md) for OAuth setup, configuration and exact p
 Typical sequence:
 
 ```text
-/save_jd {"company":"Example","role":"Engineer","jd":"Original JD text"}
+/save_jd {"company": "Example Company - TEST ONLY","role": "Python Data and GenAI Engineer - TEST ONLY","url": "https://example.com/jobs/assistant-sandbox-test","jd": "This is a synthetic test job, not a real vacancy. Required: Python, SQL and ETL troubleshooting. Familiarity with RAG and LLM evaluation is desirable. Candidates should distinguish commercial production experience from independent portfolio work."}
 /refresh_sources
 /requirements APPLICATION_ID
 /review_requirements {"application_id":"APPLICATION_ID","candidate_ids":[1,2,3],"reviewed":true}
@@ -83,6 +83,8 @@ The initial copier supports paragraph/text resumes with page and named styles. C
 
 ## Documentation
 
+- [Handover runbook: configuration, operation, backup and ownership](docs/HANDOVER.md)
+- [Documentation audit and remaining handover checks](docs/DOCUMENTATION_AUDIT.md)
 - [Setup and exact command payloads](docs/COMMANDS.md)
 - [How to test: Windows/WSL, sandbox walkthrough and recovery](docs/TESTING.md)
 - [Review and merge the PR stack](docs/REVIEW.md)
