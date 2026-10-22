@@ -1,3 +1,10 @@
+<!--
+File: docs/TESTING.md
+Purpose: How to test the assistant.
+Maintainer: sunshine-engineer
+Modified: 2026-10-23
+-->
+
 # How to test the assistant
 
 Outline: choose the branch → run offline checks → configure local services and sandbox resources → walk through one application → test failures/recovery → record results for PR review.
@@ -14,7 +21,7 @@ The PRs are stacked. Test the latest stack branch to exercise all modules withou
 
 ```bash
 git fetch origin
-git switch docs/handover-audit
+git switch chore/project-consistency
 ```
 
 If you already have uncommitted work, preserve it before switching. Review/merge order is documented in [REVIEW.md](REVIEW.md). Do not merge to run these tests.
@@ -27,7 +34,7 @@ Run from the repository root. Python 3.12+ is the target.
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
@@ -35,7 +42,7 @@ python -m venv .venv
 
 ```bash
 python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
@@ -52,6 +59,16 @@ source .venv/bin/activate
 ```
 
 Expected: all tests pass, including CLI subprocess tests and the Streamlit AppTest. These require neither Google credentials nor a running Ollama service. Google and model responses are replaced with explicit test doubles in workflow tests. Temporary state is isolated from your normal `.assistant` directory.
+
+Formatting, documentation and configuration checks:
+
+```bash
+python -m ruff check .
+python -m ruff format --check .
+python scripts/check_consistency.py
+```
+
+See [CONVENTIONS.md](CONVENTIONS.md) for metadata exceptions and the full scope. The consistency script checks Git-indexed paths; stage newly added files before using it locally.
 
 Additional checks:
 

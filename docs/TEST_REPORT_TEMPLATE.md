@@ -1,3 +1,10 @@
+<!--
+File: docs/TEST_REPORT_TEMPLATE.md
+Purpose: Manual test report.
+Maintainer: sunshine-engineer
+Modified: 2026-10-23
+-->
+
 # Manual test report
 
 Copy this template into a private note. Publish only sanitized results; omit tokens, OAuth JSON, personal text and private resource IDs.

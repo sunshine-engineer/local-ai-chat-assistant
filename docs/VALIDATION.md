@@ -1,8 +1,21 @@
+<!--
+File: docs/VALIDATION.md
+Purpose: Validation status.
+Maintainer: sunshine-engineer
+Modified: 2026-10-23
+-->
+
 # Validation status
 
-Latest implementation validation: 2026-10-22, source commit `4490c33` (PR #12). Documentation audit follows in a separate PR. Results distinguish current regression checks from historical real-service experiments.
+Consistency review: 2026-10-23 on `chore/project-consistency`, based on the PR #13 handover branch. The preceding functional implementation baseline is `4490c33` (PR #12). Results distinguish current regression checks from historical real-service experiments.
 
-## Current status
+## Current consistency validation
+
+Headers, named-callable docstrings, format/import rules, file placement, public configuration defaults and environment overrides were reviewed across the repository. Python and database entry points are explicit; historical screenshot names were normalized without changing image bytes. JSON fixtures retain their parsed values and historical run dates. Fresh results: all 81 offline tests pass on host Python 3.14 and in the repository-built Python 3.12 image with networking disabled. Ruff lint/format, compile checks, executable docstring examples, default/custom Compose configuration, and the 77-file metadata/link audit pass. All 265 named definitions have purpose docstrings with parameter documentation; original domain/helper signatures are preserved. Parsed JSON fixture values and all four screenshot byte sequences match the prior branch.
+
+An isolated real PostgreSQL instance passed chat persistence using a synthetic password containing reserved URL characters, then was removed. The two live model checks were explicitly skipped because the prior disposable model service was unavailable; no new Google/model acceptance is claimed. The existing private app and unrelated containers were not recreated. See [CONVENTIONS.md](CONVENTIONS.md) and [FILE_INVENTORY.md](FILE_INVENTORY.md).
+
+## Prior implementation status
 
 - 73 offline tests passed on host Python 3.14, in the repository-built Python 3.12 image with networking disabled, and in GitHub Actions at the implementation commit.
 - The read-only viewer passed full-app Streamlit AppTest against saved sandbox state without Google/model calls or application-record changes.

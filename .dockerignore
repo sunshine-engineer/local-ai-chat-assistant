@@ -1,3 +1,7 @@
+# File: .dockerignore
+# Purpose: Keep private state, credentials and generated caches out of Docker build contexts.
+# Maintainer: sunshine-engineer
+# Modified: 2026-10-23
 .git
 .env
 .env.*
@@ -10,3 +14,4 @@ __pycache__
 credentials*.json
 token*.json
 logs
+.ruff_cache

@@ -1,0 +1,32 @@
+# File: config/defaults.toml
+# Purpose: Non-secret runtime defaults; environment variables override these values.
+# Maintainer: sunshine-engineer
+# Modified: 2026-10-23
+[ollama]
+host = "http://localhost:11434"
+model = "qwen3:1.7b"
+context = 16384
+timeout_seconds = 300.0
+output_tokens = 4096
+prompt_char_limit = 24000
+requirement_batch_size = 3
+
+[google]
+timeout_seconds = 60.0
+
+[chat]
+temperature = 0.7
+max_tokens = 150
+
+[database]
+# Public local-demo defaults retained for compatibility, not production credentials.
+user = "chatbot"
+password = "chatbot"
+name = "chatbot"
+port = 5432
+
+[tracker]
+timezone = "Asia/Kolkata"
+
+[workflow]
+home = ".assistant"

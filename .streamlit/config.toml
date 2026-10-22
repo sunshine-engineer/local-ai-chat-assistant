@@ -1,3 +1,7 @@
+# File: .streamlit/config.toml
+# Purpose: Define the application visual theme.
+# Maintainer: sunshine-engineer
+# Modified: 2026-10-23
 [theme]
 base = "dark"
 primaryColor = "#00BFA5"

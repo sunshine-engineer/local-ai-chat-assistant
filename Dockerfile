@@ -1,4 +1,8 @@
 # syntax=docker/dockerfile:1
+# File: Dockerfile
+# Purpose: Build the Python application image with runtime dependencies and packaged defaults.
+# Maintainer: sunshine-engineer
+# Modified: 2026-10-23
 FROM python:3.12-slim
 
 WORKDIR /app
